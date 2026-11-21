@@ -12,6 +12,10 @@
   const KEY_BPOS = 'nexa.fx.miniBubblePos';
   const FIXED_W = 560;
   const FIXED_H = 340;
+  const KEY_SIZE = 'nexa.fx.miniSize';
+  const KEY_MAX = 'nexa.fx.miniMax';
+  const RATIO = FIXED_W / FIXED_H;
+  const MIN_W = 440;
   const L = (en, ar) => (document.documentElement.lang === 'ar' ? ar : en);
 
   const bar = document.createElement('div');
@@ -23,6 +27,10 @@
     '<button type="button" id="nxMiniOpen" aria-label=""><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
     '<button type="button" id="nxMiniX" aria-label="">&times;</button>';
   stage.append(bar);
+  const rz = document.createElement('span');
+  rz.className = 'nx-rz';
+  rz.setAttribute('aria-hidden', 'true');
+  stage.append(rz);
 
   const hideMini = bar.querySelector('#nxMiniHide');
   const openMini = bar.querySelector('#nxMiniOpen');
@@ -69,16 +77,16 @@
     if (!mid) return;
     const topH = stage.querySelector('.fx-top').offsetHeight;
     const ctl = stage.querySelector('.fx-ctl');
-    const reserved = topH + (ctl ? ctl.offsetHeight : 0) + 36;
+    const reserved = topH + (ctl ? ctl.offsetHeight : 0) + 24;
     const availH = Math.max(60, stage.clientHeight - reserved);
     const availW = mid.clientWidth - 20;
     const digits = stage.dataset.skin === 'digits';
     if (digits) {
-      ring.style.width = Math.min(availW, 420) + 'px';
-      const fontSize = Math.max(100, Math.min(availH * 2.34, availW * .81, 495));
+      ring.style.width = Math.min(availW, 1200) + 'px';
+      const fontSize = Math.max(100, Math.min(availH * 2.34, availW * .81, 1400));
       if (fxT) fxT.style.fontSize = Math.round(fontSize) + 'px';
     } else {
-      const ringSize = Math.max(60, Math.min(availW, availH, 320));
+      const ringSize = Math.max(60, Math.min(availW, availH, 900));
       ring.style.width = ringSize + 'px';
       const len = Math.max(readTime().length, 5);
       const fontSize = Math.max(14, Math.min(ringSize * .3, (ringSize * 1.15) / len));
@@ -117,11 +125,39 @@
     bubble.style.top = y + 'px';
     try { localStorage.setItem(KEY_BPOS, JSON.stringify({ x, y })); } catch (e) {}
   };
-  const applyFixedSize = () => {
-    const w = Math.min(FIXED_W, innerWidth - 16);
-    const h = Math.min(FIXED_H, innerHeight - 16);
+  const readMax = () => {
+    let m = null;
+    try { m = JSON.parse(localStorage.getItem(KEY_MAX) || 'null'); } catch (e) {}
+    return m && m.w > 0 && m.h > 0 ? m : { w: 900, h: 900 / RATIO };
+  };
+  const recordMax = () => {
+    if (isFloating() || !onFocusView()) return;
+    const w = stage.offsetWidth, h = stage.offsetHeight;
+    if (w > 200 && h > 120) {
+      try { localStorage.setItem(KEY_MAX, JSON.stringify({ w, h })); } catch (e) {}
+    }
+  };
+  const maxWidth = () => {
+    const m = readMax();
+    return Math.max(MIN_W, Math.min(m.w, m.h * RATIO, innerWidth - 16, (innerHeight - 16) * RATIO));
+  };
+  const clampW = w => Math.round(Math.max(Math.min(MIN_W, innerWidth - 16), Math.min(w, maxWidth())));
+  const savedW = () => {
+    let v = FIXED_W;
+    try {
+      const n = parseFloat(localStorage.getItem(KEY_SIZE));
+      if (n > 0) v = n;
+    } catch (e) {}
+    return v;
+  };
+  const setSize = w => {
+    w = clampW(w);
     stage.style.width = w + 'px';
-    stage.style.height = h + 'px';
+    stage.style.height = Math.round(w / RATIO) + 'px';
+    return w;
+  };
+  const applyFixedSize = () => {
+    setSize(savedW());
     fitInner();
     requestAnimationFrame(() => requestAnimationFrame(fitInner));
   };
@@ -157,6 +193,34 @@
   };
   bar.addEventListener('pointerup', endDrag);
   bar.addEventListener('pointercancel', endDrag);
+
+  let rdrag = null;
+  rz.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    rdrag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, w: stage.offsetWidth };
+    try { rz.setPointerCapture(e.pointerId); } catch (err) {}
+    stage.classList.add('nx-resizing');
+  });
+  rz.addEventListener('pointermove', e => {
+    if (!rdrag || e.pointerId !== rdrag.id) return;
+    const dx = e.clientX - rdrag.sx, dy = e.clientY - rdrag.sy;
+    let w = rdrag.w + (dx + dy * RATIO) / 2;
+    setSize(w);
+    place(stage.offsetLeft, stage.offsetTop);
+    fitInner();
+  });
+  const endResize = e => {
+    if (!rdrag || e.pointerId !== rdrag.id) return;
+    rdrag = null;
+    stage.classList.remove('nx-resizing');
+    place(stage.offsetLeft, stage.offsetTop);
+    try { localStorage.setItem(KEY_SIZE, String(stage.offsetWidth)); } catch (err) {}
+    fitInner();
+  };
+  rz.addEventListener('pointerup', endResize);
+  rz.addEventListener('pointercancel', endResize);
 
   let bdrag = null;
   bubble.addEventListener('pointerdown', e => {
@@ -194,15 +258,24 @@
     stage.style.display = '';
   };
 
+  let ro = null;
   const engage = () => {
     document.body.appendChild(stage);
     stage.classList.add('fx-mini-float');
     restoreGeometry();
+    if (window.ResizeObserver && !ro) {
+      ro = new ResizeObserver(() => fitInner());
+      ro.observe(stage);
+    }
     syncLabel();
     requestAnimationFrame(() => requestAnimationFrame(fitInner));
   };
   const disengage = () => {
     expand();
+    if (ro) {
+      ro.disconnect();
+      ro = null;
+    }
     stage.classList.remove('fx-mini-float');
     stage.style.left = stage.style.top = stage.style.width = stage.style.height = '';
     unfitInner();
@@ -211,11 +284,13 @@
 
   const refresh = () => {
     const show = !onFocusView() && getFlag();
+    if (onFocusView() && !isFloating()) requestAnimationFrame(() => requestAnimationFrame(recordMax));
     if (show && !isFloating()) engage();
     else if (!show && isFloating()) disengage();
   };
 
   openBtn.addEventListener('click', () => {
+    recordMax();
     setFlag(true);
     location.hash = lastView;
     refresh();
@@ -237,6 +312,7 @@
     refresh();
   });
   addEventListener('resize', () => {
+    recordMax();
     if (isFloating()) {
       applyFixedSize();
       place(stage.offsetLeft, stage.offsetTop);
