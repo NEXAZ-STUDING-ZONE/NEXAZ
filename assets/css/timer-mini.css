@@ -95,11 +95,11 @@
   align-items: center;
   justify-content: center;
   padding: 0 14px;
-  background: linear-gradient(120deg, #fb923c, #f472b6, #818cf8, #fb923c);
-  background-size: 200% 200%;
-  animation: nxBubbleFlow 6s ease-in-out infinite;
-  border: 1px solid rgba(255, 255, 255, .3);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, .42);
+  background: linear-gradient(145deg, rgba(16, 44, 54, .94), rgba(7, 22, 32, .96));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(143, 245, 222, .38);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .4), inset 0 0 0 1px rgba(255, 255, 255, .05), 0 0 24px var(--fx-glow, rgba(72, 205, 178, .45));
   font-family: 'Lemonada', Manrope, Alexandria, system-ui, sans-serif;
   font-size: 18px;
   font-weight: 800;
@@ -113,23 +113,15 @@
 }
 .nx-bubble.show { display: flex; }
 .nx-bubble.dragging { cursor: grabbing; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .nx-bubble {
-    background: linear-gradient(120deg, #06b6a4, #7c4dff, #ff5c8a, #06b6a4);
-  }
-}
-:root[data-theme="dark"] .nx-bubble {
-  background: linear-gradient(120deg, #06b6a4, #7c4dff, #ff5c8a, #06b6a4);
-}
 .nx-bubble span {
-  background-image: linear-gradient(90deg, #ff3d7f, #ffb020, #3da9fc, #ff3d7f);
+  background-image: linear-gradient(90deg, var(--fx-g1, #8ff5de), var(--fx-g2, #ffffff), var(--fx-g3, #7fd6ff), var(--fx-g1, #8ff5de));
   background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, .4);
-  animation: nxTextFlow 4s linear infinite reverse;
+  filter: drop-shadow(0 0 8px var(--fx-glow, rgba(72, 205, 178, .5)));
+  animation: nxTextFlow 10s linear infinite;
 }
 
 @keyframes nxTextFlow {
