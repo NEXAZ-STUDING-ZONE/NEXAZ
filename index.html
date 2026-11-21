@@ -5,10 +5,10 @@
     <script src="assets/js/preload.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>NEXAZ</title>
-    <link rel="icon" href="assets/img/nexa-favicon.ico?v=8" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/nexa-tab-32.png?v=8">
-    <link rel="icon" type="image/png" sizes="64x64" href="assets/img/nexa-tab-64.png?v=8">
-    <link rel="apple-touch-icon" href="assets/img/nexa-notif-192.png?v=8">
+    <link rel="icon" href="assets/img/nexa-favicon.ico?v=9" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/nexa-tab-32.png?v=9">
+    <link rel="icon" type="image/png" sizes="64x64" href="assets/img/nexa-tab-64.png?v=9">
+    <link rel="apple-touch-icon" href="assets/img/nexa-notif-192.png?v=9">
     <meta name="theme-color" content="#f1fbfa">
     <link rel="manifest" href="app.webmanifest">
     <meta name="mobile-web-app-capable" content="yes">
@@ -17,9 +17,9 @@
     <meta name="apple-mobile-web-app-title" content="NEXAZ">
     <link rel="stylesheet" href="assets/css/typefaces.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="assets/css/typefaces.css"></noscript>
-    <link rel="stylesheet" href="assets/css/nexa.css?v=8">
+    <link rel="stylesheet" href="assets/css/nexa.css?v=9">
     <link rel="stylesheet" href="assets/css/nexa-wordmark.css">
-    <link rel="stylesheet" href="assets/css/timer-mini.css?v=8">
+    <link rel="stylesheet" href="assets/css/timer-mini.css?v=9">
     <script>
         (function () {
             var LIGHT = '#f3f9f9', DARK = '#101b19';
@@ -219,7 +219,7 @@
                     </div>
                     <div class="calc-mount" id="cxMount"></div>
                 </div>
-                <template id="cxTpl"><link rel="stylesheet" href="assets/css/calculator.css?v=8"><div class="cxs" id="cxs"><div class="fit" id="fit"><div class="calc" id="calc">
+                <template id="cxTpl"><link rel="stylesheet" href="assets/css/calculator.css?v=9"><div class="cxs" id="cxs"><div class="fit" id="fit"><div class="calc" id="calc">
  <div class="brand"><span class="b1">fx-991</span><span class="b2">SCIENTIFIC CALCULATOR</span><span class="solar"><i></i><i></i><i></i><i></i></span></div>
  <div class="lcd" id="lcd"><div class="sb" id="sb"></div><div class="ex" id="ex"></div><div class="rs" id="rs">0</div><div class="bt" id="bt" hidden></div><div class="sp" id="sp"><div class="spt" id="spt"></div><div class="sph">TAP SCREEN OR PRESS AC TO WAKE</div></div></div>
  <div id="kp"></div>
@@ -315,6 +315,9 @@
                     <div class="card about-item"><span class="about-ic"><svg class="i"><use href="#i-book"/></svg></span><h3 data-t>Library</h3>
                         <p data-t>Upload your PDF books, read them on this device and write on the pages with a pen, highlighter, text, sticky notes and shapes.</p>
                     </div>
+                    <div class="card about-item"><span class="about-ic"><svg class="i"><use href="#i-calc"/></svg></span><h3 data-t>Calculator</h3>
+                        <p data-t>A full scientific calculator for your study sessions, with a landscape view and an expanded mode.</p>
+                    </div>
                     <div class="card about-item"><span class="about-ic"><svg class="i"><use href="#i-tasks"/></svg></span><h3 data-t>My Tasks</h3>
                         <p data-t>Add tasks by difficulty, easiest first, tick them off and watch your progress grow.</p>
                     </div>
@@ -331,10 +334,29 @@
                         <p data-t>A smart whiteboard to draw, write and present: pens, highlighter, shapes, text, sticky notes, stickers, images and a laser pointer, with many pages you can save as a PDF.</p>
                     </div>
                 </div>
+                <div class="card about-updates">
+                    <div class="au-head"><span class="au-badge" data-t>NEW</span><h3 data-t>What is new</h3></div>
+                    <ul class="au-list">
+                    <li><span class="au-dot" aria-hidden="true"></span><div><b data-t>Scientific Calculator</b><p data-t>A new section with a full fx-991 style calculator: landscape view, an expanded mode and keyboard support.</p></div></li>
+                    <li><span class="au-dot" aria-hidden="true"></span><div><b data-t>Resizable mini timer</b><p data-t>Drag the corner to resize the floating timer. The shape stays the same and the background scales smoothly.</p></div></li>
+                    <li><span class="au-dot" aria-hidden="true"></span><div><b data-t>Timer above your files</b><p data-t>The mini timer now stays on screen while you read or edit a file.</p></div></li>
+                    <li><span class="au-dot" aria-hidden="true"></span><div><b data-t>Timer colours</b><p data-t>The digits and the floating button now follow the background and the site colours.</p></div></li>
+                    <li><span class="au-dot" aria-hidden="true"></span><div><b data-t>Loading screen</b><p data-t>A short loading screen appears the first time you open a section while its files load.</p></div></li>
+                    <li><span class="au-dot" aria-hidden="true"></span><div><b data-t>NEXAZ</b><p data-t>A new name for the same calm study space.</p></div></li>
+                    </ul>
+                </div>
                 <div class="card about-note"><h3 data-t>Your data stays with you</h3>
                     <p data-t>Books, notes and settings are saved on this device only and are never uploaded. Clearing your browser data will remove them.</p>
                 </div>
-                <div class="card about-credit"><span data-t>Designed &amp; developed by</span><strong class="sign">boody_3ta &amp; vaelor</strong></div>
+                <div class="card about-credit code-credit">
+                    <span class="cc-label" data-t>Designed &amp; developed by</span>
+                    <div class="cc-win" dir="ltr">
+                        <div class="cc-bar"><i></i><i></i><i></i><span>nexaz.js</span></div>
+                        <pre class="cc-code"><code><span class="cc-ln">1</span><span class="cc-k">const</span> <span class="cc-v">team</span> <span class="cc-o">=</span> [<span class="cc-s">"boody_3ta"</span>, <span class="cc-s">"vaelor"</span>];
+<span class="cc-ln">2</span><span class="cc-v">team</span>.<span class="cc-f">map</span>(<span class="cc-v">dev</span> <span class="cc-o">=&gt;</span> <span class="cc-v">dev</span>.<span class="cc-f">build</span>(<span class="cc-s">"NEXAZ"</span>));
+<span class="cc-ln">3</span><span class="cc-p">&gt;</span> <span class="cc-ok">Think Beyond</span><span class="cc-cur"></span></code></pre>
+                    </div>
+                </div>
             </section>
             <section class="view" id="v-settings"><h1 class="pg" data-t>Settings</h1>
                 <div class="card">
@@ -392,9 +414,9 @@
     <script src="assets/js/color-picker.js"></script>
     <script defer src="assets/js/pdf-core.js"></script>
     <script defer src="assets/js/board-host.js"></script>
-    <script defer src="assets/js/nexa.js?v=8"></script>
-    <script defer src="assets/js/calculator.js?v=8"></script>
-    <script defer src="assets/js/timer-mini.js?v=8"></script>
-    <script defer src="assets/js/section-loader.js?v=8"></script>
+    <script defer src="assets/js/nexa.js?v=9"></script>
+    <script defer src="assets/js/calculator.js?v=9"></script>
+    <script defer src="assets/js/timer-mini.js?v=9"></script>
+    <script defer src="assets/js/section-loader.js?v=9"></script>
 </body>
 </html>
