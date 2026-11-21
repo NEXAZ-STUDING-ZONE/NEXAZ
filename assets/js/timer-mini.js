@@ -82,10 +82,20 @@
     const availW = mid.clientWidth - 20;
     const digits = stage.dataset.skin === 'digits';
     if (digits) {
-      ring.style.width = Math.min(availW, 1200) + 'px';
-      const fontSize = Math.max(100, Math.min(availH * 2.34, availW * .81, 1400));
-      if (fxT) fxT.style.fontSize = Math.round(fontSize) + 'px';
+      const rw = Math.min(availW, 1200);
+      const rh = Math.max(60, availH);
+      ring.style.width = rw + 'px';
+      ring.style.height = rh + 'px';
+      ring.style.aspectRatio = 'auto';
+      if (fxT) {
+        fxT.style.fontSize = '100px';
+        const w100 = Math.max(60, fxT.scrollWidth);
+        const fs = Math.max(24, Math.min(rh / 1.2, (rw * .94 - 36) * 100 / Math.max(1, w100 - 36)));
+        fxT.style.fontSize = Math.round(fs) + 'px';
+      }
     } else {
+      ring.style.height = '';
+      ring.style.aspectRatio = '';
       const ringSize = Math.max(60, Math.min(availW, availH, 900));
       ring.style.width = ringSize + 'px';
       const len = Math.max(readTime().length, 5);
@@ -96,6 +106,8 @@
   const unfitInner = () => {
     if (!ring) return;
     ring.style.width = '';
+    ring.style.height = '';
+    ring.style.aspectRatio = '';
     if (fxT) fxT.style.fontSize = '';
   };
 
@@ -107,6 +119,11 @@
   const syncLabel = () => {
     lblEl.textContent = fxL ? fxL.textContent.trim() : '';
     bubbleT.textContent = readTime();
+    const cs = getComputedStyle(stage);
+    ['--fx-g1', '--fx-g2', '--fx-g3', '--fx-glow'].forEach(k => {
+      const v = cs.getPropertyValue(k).trim();
+      if (v) bubble.style.setProperty(k, v);
+    });
   };
 
   const place = (x, y) => {
@@ -259,6 +276,8 @@
   };
 
   let ro = null;
+  let mo = null;
+  let lastLen = 0;
   const engage = () => {
     document.body.appendChild(stage);
     stage.classList.add('fx-mini-float');
@@ -266,6 +285,10 @@
     if (window.ResizeObserver && !ro) {
       ro = new ResizeObserver(() => fitInner());
       ro.observe(stage);
+    }
+    if (window.MutationObserver && !mo) {
+      mo = new MutationObserver(() => requestAnimationFrame(fitInner));
+      mo.observe(stage, { attributes: true, attributeFilter: ['data-skin'] });
     }
     syncLabel();
     requestAnimationFrame(() => requestAnimationFrame(fitInner));
@@ -275,6 +298,10 @@
     if (ro) {
       ro.disconnect();
       ro = null;
+    }
+    if (mo) {
+      mo.disconnect();
+      mo = null;
     }
     stage.classList.remove('fx-mini-float');
     stage.style.left = stage.style.top = stage.style.width = stage.style.height = '';
@@ -320,7 +347,16 @@
     if (isCollapsed()) placeBubble(bubble.offsetLeft, bubble.offsetTop);
   });
   addEventListener('nexa:lang', () => { labels(); syncLabel(); });
-  setInterval(() => { if (isFloating() || isCollapsed()) syncLabel(); }, 500);
+  setInterval(() => {
+    if (isFloating() || isCollapsed()) syncLabel();
+    if (isFloating()) {
+      const n = readTime().length;
+      if (n !== lastLen) {
+        lastLen = n;
+        fitInner();
+      }
+    }
+  }, 500);
 
   labels();
   refresh();

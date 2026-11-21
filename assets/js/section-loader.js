@@ -1,5 +1,6 @@
 (function () {
-    var MIN = 240;
+    var MIN = 1500;
+    var seen = {};
     var MAX = 15000;
     var current = null;
     var token = 0;
@@ -95,6 +96,8 @@
     function show(id) {
         var view = document.getElementById('v-' + id);
         if (!view) return;
+        if (seen[id]) return;
+        seen[id] = true;
         if (current && current.view !== view) drop(current);
         var my = ++token;
         var o = overlay(view);
