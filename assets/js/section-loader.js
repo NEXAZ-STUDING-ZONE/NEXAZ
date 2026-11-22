@@ -93,6 +93,11 @@
     }
 
     function specific(id) {
+        var lazy = window.NXLAZY ? window.NXLAZY.section(id) : Promise.resolve();
+        return lazy.then(function () { return specific2(id); });
+    }
+
+    function specific2(id) {
         if (id === 'smartboard') {
             return poll(function () {
                 var h = document.getElementById('gnBoardHost');

@@ -53,8 +53,9 @@
     let imgsStarted = false,
         audioStarted = false;
     const loadImgs = () => {
-        if (imgsStarted) return;
-        imgsStarted = true;
+        if (imgsStarted) return imgsStarted;
+        let first;
+        imgsStarted = new Promise(r => first = r);
         let want = '';
         try {
             want = localStorage.getItem('nexa.focus.background.v3') || '';
@@ -62,17 +63,25 @@
         const order = Object.keys(BG).sort((a, b) => (b === want) - (a === want));
         const next = () => {
             const id = order.shift();
-            if (!id) return;
+            if (!id) {
+                first();
+                return;
+            }
             const im = new Image();
             im.decoding = 'async';
             if ('fetchPriority' in im) im.fetchPriority = 'low';
-            im.onload = im.onerror = next;
+            im.onload = im.onerror = () => {
+                first();
+                next();
+            };
             im.src = BG[id];
             P.imgs.push(im);
             if (id === want && im.decode) im.decode().catch(() => {});
         };
         next();
+        return imgsStarted;
     };
+    P.loadImgs = loadImgs;
     const fetchBlob = async src => {
         const res = await fetch(src, {
             priority: 'low'
@@ -101,18 +110,75 @@
         };
         next();
     };
-    const idle = f => 'requestIdleCallback' in window ? requestIdleCallback(f, {
-        timeout: 3000
-    }) : setTimeout(f, 1500);
-    const run = () => setTimeout(() => idle(() => {
-        if (lite()) return;
-        loadImgs();
-        P.loadAudio();
-    }), 1200);
-    if (document.readyState === 'complete') run();
-    else addEventListener('load', run, {
-        once: true
-    });
 })();
 
 ;
+
+;
+(() => {
+    const V = '?v=14';
+    const cache = {};
+    const js = src => cache[src] || (cache[src] = new Promise((ok, no) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.async = true;
+        s.onload = () => ok();
+        s.onerror = () => {
+            delete cache[src];
+            no(new Error(src));
+        };
+        document.head.appendChild(s);
+    }));
+    const css = href => cache[href] || (cache[href] = new Promise(ok => {
+        const l = document.createElement('link');
+        l.rel = 'stylesheet';
+        l.href = href;
+        l.onload = l.onerror = () => ok();
+        document.head.appendChild(l);
+    }));
+    const pdf = () => window.pdfjsLib ? Promise.resolve() : js('assets/js/pdf-core.js').then(() => {
+        try {
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'assets/js/pdf-worker.js';
+        } catch (e) {}
+    });
+    const fonts = () => css('assets/css/typefaces-extra.css');
+    const calc = () => js('assets/js/calculator.js' + V);
+    const fx = () => js('assets/js/timer-mini.js' + V);
+    const done = {};
+    const section = id => {
+        if (done[id]) return done[id];
+        let p = Promise.resolve();
+        if (id === 'library') {
+            pdf().catch(() => {});
+            fonts();
+            fetch('assets/js/pdf-worker.js').catch(() => {});
+            p = pdf().catch(() => {});
+        } else if (id === 'calculator') {
+            p = calc().catch(() => {});
+        } else if (id === 'notes') {
+            p = fonts();
+        } else if (id === 'focus') {
+            p = Promise.all([fx().catch(() => {}), window.NXPRE && NXPRE.loadImgs ? NXPRE.loadImgs() : null]);
+        }
+        done[id] = p.then(() => {}, () => {});
+        return done[id];
+    };
+    window.NXLAZY = {
+        js: js,
+        css: css,
+        pdf: pdf,
+        fonts: fonts,
+        section: section
+    };
+    const boot = () => {
+        let on = false;
+        try {
+            on = localStorage.getItem('nexa.fx.mini') === '1';
+        } catch (e) {}
+        if (on) fx().catch(() => {});
+    };
+    if (document.readyState === 'complete') boot();
+    else addEventListener('load', boot, {
+        once: true
+    });
+})();

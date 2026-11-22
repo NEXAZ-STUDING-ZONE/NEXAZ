@@ -553,7 +553,7 @@
                 document.body.dataset.view = id;
                 $$('.view').forEach(e => e.classList.toggle('on', e.id === 'v-' + id));
                 $$('#nav a[data-v]').forEach(a => a.classList.toggle('on', a.dataset.v === id));
-                if (id === 'focus' && window.NXPRE && NXPRE.loadAudio) NXPRE.loadAudio();
+                if (window.NXLAZY) NXLAZY.section(id);
                 if (id === 'smartboard' && window.NXGN) {
                     const h = $('#gnBoardHost');
                     NXGN.mountBoard(h).catch(() => {
@@ -8534,6 +8534,7 @@
                         onProg && onProg(p, l)
                     } catch (e) {}
                 };
+                if (window.NXLAZY) await NXLAZY.pdf().catch(() => {});
                 const lib = window.pdfjsLib;
                 if (!lib) throw new Error('PDF engine unavailable');
                 prog(0, L('Starting PDF engine…', 'جارٍ تشغيل محرك PDF…'));
