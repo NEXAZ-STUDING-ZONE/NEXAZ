@@ -1,5 +1,5 @@
 (function () {
-    var MIN = 1500;
+    var MIN = 1250;
     var seen = {};
     var MAX = 15000;
     var current = null;
@@ -29,6 +29,48 @@
                 setTimeout(tick, 60);
             })();
         });
+    }
+
+    function settle(view, quiet, limit) {
+        return new Promise(function (ok) {
+            var timer = null, cap = null, finished = false;
+            var mo = new MutationObserver(function (list) {
+                var real = list.some(function (m) {
+                    var el = m.target.nodeType === 1 ? m.target : m.target.parentElement;
+                    return !(el && el.closest('.nx-secload'));
+                });
+                if (real) arm();
+            });
+            function end() {
+                if (finished) return;
+                finished = true;
+                clearTimeout(timer);
+                clearTimeout(cap);
+                mo.disconnect();
+                ok();
+            }
+            function arm() {
+                clearTimeout(timer);
+                timer = setTimeout(end, quiet);
+            }
+            cap = setTimeout(end, limit);
+            mo.observe(view, { childList: true, characterData: true, subtree: true });
+            arm();
+        });
+    }
+
+    function filled(sel, limit) {
+        return poll(function () {
+            var e = document.querySelector(sel);
+            return e && (e.children.length || e.textContent.trim());
+        }, limit);
+    }
+
+    function storeReady() {
+        if (window.NXSTORE && window.NXSTORE.raw) {
+            return Promise.race([window.NXSTORE.raw.get('__nx_ready').catch(function () {}), wait(8000)]);
+        }
+        return Promise.resolve();
     }
 
     function fonts() {
@@ -63,8 +105,16 @@
                 return m && m.shadowRoot && m.shadowRoot.querySelector('#kp button');
             }, 8000);
         }
-        if (id === 'library' && window.NXSTORE && window.NXSTORE.raw) {
-            return Promise.race([window.NXSTORE.raw.get('__nx_ready').catch(function () {}), wait(8000)]);
+        if (id === 'library' || id === 'home') return storeReady();
+        if (id === 'tasks') return filled('#allTasks', 4000);
+        if (id === 'timetable') return filled('#ttGrid', 4000);
+        if (id === 'notes') {
+            return poll(function () {
+                var c = document.getElementById('nnCount');
+                var g = document.getElementById('nnGrid');
+                var p = document.getElementById('nnPin');
+                return (c && c.textContent.trim()) || (g && g.children.length) || (p && p.children.length);
+            }, 4000);
         }
         return Promise.resolve();
     }
@@ -79,6 +129,7 @@
             o.className = 'nx-secload';
             o.setAttribute('role', 'status');
             o.setAttribute('aria-live', 'polite');
+            o.setAttribute('aria-busy', 'true');
             o.innerHTML = '<div class="nx-secload-ring"></div><b></b><small></small><div class="nx-secload-bar"><i></i></div>';
             view.appendChild(o);
         }
@@ -120,7 +171,11 @@
                 if (my === token) drop(current);
             }, 280);
         }
-        Promise.all([wait(MIN), fonts(), frames(), images(view), specific(id)]).then(finish, finish);
+        Promise.all([wait(MIN), fonts(), frames(), specific(id)]).then(function () {
+            return Promise.all([images(view), settle(view, 180, 5000)]);
+        }).then(function () {
+            return frames();
+        }).then(finish, finish);
         setTimeout(finish, MAX);
     }
 

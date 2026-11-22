@@ -198,6 +198,9 @@
                 'Remove': 'إزالة',
                 'Dark mode': 'الوضع الداكن',
                 'Photo updated': 'تم تحديث الصورة',
+                'Crop photo': 'اقتصاص الصورة',
+                'Zoom': 'التكبير',
+                'Drag to reposition, scroll or pinch to zoom': 'اسحب لتحريك الصورة، وكبّر بالعجلة أو بإصبعين',
                 'Photo removed': 'تمت إزالة الصورة',
                 'Please choose an image file': 'اختر ملف صورة صالحًا',
                 'Big.': 'بلا حدود.',
@@ -846,8 +849,200 @@
                 save()
             };
             {
+                const openCropper = file => new Promise(resolve => {
+                    const url = URL.createObjectURL(file),
+                        im = new Image();
+                    im.onerror = () => {
+                        URL.revokeObjectURL(url);
+                        resolve(null)
+                    };
+                    im.onload = () => {
+                        const W = im.naturalWidth,
+                            H = im.naturalHeight,
+                            M = 22,
+                            MAXZ = 5;
+                        const root = document.createElement('div');
+                        root.className = 'nx-crop';
+                        root.setAttribute('role', 'dialog');
+                        root.setAttribute('aria-modal', 'true');
+                        root.setAttribute('aria-label', tr('Crop photo'));
+                        root.innerHTML = '<div class="nx-crop-card"><div class="nx-crop-hd"><b></b><button type="button" class="nx-crop-x" aria-label="' + tr('Cancel') + '"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><div class="nx-crop-stage"><img alt="" draggable="false"><div class="nx-crop-mask"></div></div><div class="nx-crop-zoom"><button type="button" data-z="-1" aria-label="-">−</button><input type="range" min="0" max="100" step="0.5" value="0" aria-label="' + tr('Zoom') + '"><button type="button" data-z="1" aria-label="+">+</button></div><p class="nx-crop-hint"></p><div class="nx-crop-ft"><button type="button" class="btn ghost" data-a="cancel"></button><button type="button" class="btn" data-a="save"></button></div></div>';
+                        root.querySelector('.nx-crop-hd b').textContent = tr('Crop photo');
+                        root.querySelector('.nx-crop-hint').textContent = tr('Drag to reposition, scroll or pinch to zoom');
+                        root.querySelector('[data-a="cancel"]').textContent = tr('Cancel');
+                        root.querySelector('[data-a="save"]').textContent = tr('Save');
+                        const stage = root.querySelector('.nx-crop-stage'),
+                            img = root.querySelector('img'),
+                            mask = root.querySelector('.nx-crop-mask'),
+                            rng = root.querySelector('input');
+                        img.src = url;
+                        let SZ = 0,
+                            C = 0,
+                            minS = 1,
+                            sc = 1,
+                            tx = 0,
+                            ty = 0,
+                            closed = false;
+                        const ptrs = new Map();
+                        let last = null;
+                        const clamp = () => {
+                            const mx = Math.max(0, (W * sc - C) / 2),
+                                my = Math.max(0, (H * sc - C) / 2);
+                            tx = Math.min(mx, Math.max(-mx, tx));
+                            ty = Math.min(my, Math.max(-my, ty))
+                        };
+                        const paint = () => {
+                            img.style.width = W * sc + 'px';
+                            img.style.height = H * sc + 'px';
+                            img.style.transform = 'translate(-50%,-50%) translate(' + tx + 'px,' + ty + 'px)';
+                            const v = (sc / minS - 1) / (MAXZ - 1) * 100;
+                            rng.value = v;
+                            rng.style.setProperty('--p', v + '%')
+                        };
+                        const zoomTo = (ns, px, py) => {
+                            ns = Math.min(minS * MAXZ, Math.max(minS, ns));
+                            const k = ns / sc;
+                            tx = px - (px - tx) * k;
+                            ty = py - (py - ty) * k;
+                            sc = ns;
+                            clamp();
+                            paint()
+                        };
+                        const layout = keep => {
+                            SZ = Math.max(220, Math.min(340, window.innerWidth - 68));
+                            C = SZ - M * 2;
+                            stage.style.width = stage.style.height = SZ + 'px';
+                            mask.style.left = mask.style.top = M + 'px';
+                            mask.style.width = mask.style.height = C + 'px';
+                            const prev = minS;
+                            minS = C / Math.min(W, H);
+                            sc = keep ? Math.max(minS, sc / prev * minS) : minS;
+                            if (!keep) {
+                                tx = 0;
+                                ty = 0
+                            }
+                            clamp();
+                            paint()
+                        };
+                        const prevOverflow = document.body.style.overflow;
+                        document.body.style.overflow = 'hidden';
+                        document.body.appendChild(root);
+                        layout(false);
+                        requestAnimationFrame(() => root.classList.add('in'));
+                        const finish = out => {
+                            if (closed) return;
+                            closed = true;
+                            window.removeEventListener('resize', onResize);
+                            document.removeEventListener('keydown', onKey, true);
+                            document.body.style.overflow = prevOverflow;
+                            root.classList.remove('in');
+                            setTimeout(() => root.remove(), 220);
+                            URL.revokeObjectURL(url);
+                            resolve(out)
+                        };
+                        const commit = () => {
+                            try {
+                                const N = 256,
+                                    c = document.createElement('canvas');
+                                c.width = c.height = N;
+                                const x = c.getContext('2d'),
+                                    sw = C / sc,
+                                    sx = W / 2 + (-C / 2 - tx) / sc,
+                                    sy = H / 2 + (-C / 2 - ty) / sc;
+                                x.fillStyle = '#fff';
+                                x.fillRect(0, 0, N, N);
+                                x.imageSmoothingQuality = 'high';
+                                x.drawImage(im, sx, sy, sw, sw, 0, 0, N, N);
+                                finish(c.toDataURL('image/jpeg', .88))
+                            } catch (err) {
+                                finish(null)
+                            }
+                        };
+                        const onResize = () => layout(true);
+                        const onKey = e => {
+                            if (e.key === 'Escape') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                finish(null)
+                            } else if (e.key === 'Enter' && !(e.target && e.target.closest && e.target.closest('button'))) {
+                                e.preventDefault();
+                                commit()
+                            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                if (e.target === rng) return;
+                                e.preventDefault();
+                                tx += e.key === 'ArrowLeft' ? 10 : e.key === 'ArrowRight' ? -10 : 0;
+                                ty += e.key === 'ArrowUp' ? 10 : e.key === 'ArrowDown' ? -10 : 0;
+                                clamp();
+                                paint()
+                            } else if (e.key === '+' || e.key === '=') {
+                                zoomTo(sc * 1.1, 0, 0)
+                            } else if (e.key === '-') {
+                                zoomTo(sc / 1.1, 0, 0)
+                            }
+                        };
+                        window.addEventListener('resize', onResize);
+                        document.addEventListener('keydown', onKey, true);
+                        const rel = e => {
+                            const r = stage.getBoundingClientRect();
+                            return [e.clientX - r.left - SZ / 2, e.clientY - r.top - SZ / 2]
+                        };
+                        stage.addEventListener('pointerdown', e => {
+                            stage.setPointerCapture(e.pointerId);
+                            ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+                            stage.classList.add('drag');
+                            last = null
+                        });
+                        stage.addEventListener('pointermove', e => {
+                            if (!ptrs.has(e.pointerId)) return;
+                            const old = ptrs.get(e.pointerId);
+                            ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+                            if (ptrs.size === 2) {
+                                const a = [...ptrs.values()],
+                                    d = Math.hypot(a[0][0] - a[1][0], a[0][1] - a[1][1]);
+                                if (last) {
+                                    const r = stage.getBoundingClientRect(),
+                                        cx = (a[0][0] + a[1][0]) / 2 - r.left - SZ / 2,
+                                        cy = (a[0][1] + a[1][1]) / 2 - r.top - SZ / 2;
+                                    zoomTo(sc * d / last, cx, cy)
+                                }
+                                last = d
+                            } else if (ptrs.size === 1) {
+                                tx += e.clientX - old[0];
+                                ty += e.clientY - old[1];
+                                clamp();
+                                paint()
+                            }
+                        });
+                        const up = e => {
+                            ptrs.delete(e.pointerId);
+                            last = null;
+                            if (!ptrs.size) stage.classList.remove('drag')
+                        };
+                        stage.addEventListener('pointerup', up);
+                        stage.addEventListener('pointercancel', up);
+                        stage.addEventListener('wheel', e => {
+                            e.preventDefault();
+                            const [px, py] = rel(e);
+                            zoomTo(sc * Math.exp(-e.deltaY * .0016), px, py)
+                        }, {
+                            passive: false
+                        });
+                        rng.addEventListener('input', () => {
+                            zoomTo(minS * (1 + (MAXZ - 1) * rng.value / 100), 0, 0)
+                        });
+                        root.querySelectorAll('[data-z]').forEach(b => b.addEventListener('click', () => zoomTo(sc * (+b.dataset.z > 0 ? 1.2 : 1 / 1.2), 0, 0)));
+                        root.querySelector('[data-a="save"]').addEventListener('click', commit);
+                        root.querySelector('[data-a="cancel"]').addEventListener('click', () => finish(null));
+                        root.querySelector('.nx-crop-x').addEventListener('click', () => finish(null));
+                        root.addEventListener('pointerdown', e => {
+                            if (e.target === root) finish(null)
+                        });
+                        root.querySelector('[data-a="save"]').focus()
+                    };
+                    im.src = url
+                });
                 const af = $('#avFile');
-                if (af) af.onchange = e => {
+                if (af) af.onchange = async e => {
                     const f = e.target.files && e.target.files[0];
                     e.target.value = '';
                     if (!f) return;
@@ -855,33 +1050,17 @@
                         toast(tr('Please choose an image file'));
                         return
                     }
-                    const url = URL.createObjectURL(f),
-                        im = new Image();
-                    im.onload = () => {
-                        try {
-                            const N = 256,
-                                c = document.createElement('canvas');
-                            c.width = c.height = N;
-                            const x = c.getContext('2d'),
-                                m = Math.min(im.naturalWidth, im.naturalHeight),
-                                sx = (im.naturalWidth - m) / 2,
-                                sy = (im.naturalHeight - m) / 2;
-                            x.drawImage(im, sx, sy, m, m, 0, 0, N, N);
-                            S.avatar = c.toDataURL('image/jpeg', .86);
-                            save();
-                            syncProfile();
-                            SFX.add();
-                            toast(tr('Photo updated'))
-                        } catch (err) {
-                            toast(tr('Please choose an image file'))
-                        }
-                        URL.revokeObjectURL(url)
-                    };
-                    im.onerror = () => {
-                        URL.revokeObjectURL(url);
-                        toast(tr('Please choose an image file'))
-                    };
-                    im.src = url
+                    const out = await openCropper(f);
+                    if (out === null) return;
+                    if (!out) {
+                        toast(tr('Please choose an image file'));
+                        return
+                    }
+                    S.avatar = out;
+                    save();
+                    syncProfile();
+                    SFX.add();
+                    toast(tr('Photo updated'))
                 };
                 const ad = $('#avDel');
                 if (ad) ad.onclick = () => {
