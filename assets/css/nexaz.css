@@ -5123,7 +5123,12 @@
             justify-content: space-between;
             align-items: center;
             gap: 12px;
-            flex-wrap: wrap
+            flex-wrap: wrap;
+            padding: 12px 16px;
+            border-radius: 20px;
+            background: var(--card);
+            border: 1px solid var(--line);
+            box-shadow: var(--sh)
         }
 
         .nt-week {
@@ -5153,7 +5158,8 @@
         }
 
         .nt-week .b:hover {
-            background: var(--act)
+            background: var(--act);
+            color: var(--acc)
         }
 
         .nt-perm {
@@ -5256,11 +5262,18 @@
             flex-direction: column;
             gap: 10px;
             min-height: 280px;
-            min-width: 0
+            min-width: 0;
+            transition: transform .18s, box-shadow .18s
+        }
+
+        .tt-day:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px rgba(20, 60, 50, .14)
         }
 
         .tt-day.today {
             border-color: var(--acc);
+            background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 6%, var(--card)), var(--card));
             box-shadow: 0 0 0 2px rgba(47, 166, 138, .22), var(--sh)
         }
 
@@ -5347,10 +5360,11 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
-            padding: 10px 38px 10px 10px;
+            padding: 10px 38px 10px 14px;
             border-radius: 15px;
             background: color-mix(in srgb, var(--c) 20%, var(--card));
             border-inline-start: 4px solid var(--c);
+            box-shadow: 0 2px 8px rgba(20, 60, 50, .06);
             cursor: pointer;
             transition: transform .15s, box-shadow .15s
         }
@@ -8914,14 +8928,15 @@ html.kb-open .nm-pop {
 :root[data-theme="dark"] .calc-bar{background:rgba(255,255,255,.03)}
 .calc-bar-title{display:flex;align-items:center;gap:12px;min-width:0}
 .calc-bar-title b{display:block;font-size:15px;color:var(--text);white-space:nowrap}
-.calc-bar-title small{display:block;margin-top:2px;font:italic 700 12px Georgia,"Times New Roman",serif;color:var(--muted);letter-spacing:.3px}
+.calc-bar-title small{display:block;margin-top:2px;font:italic 700 12px Changa,Alexandria,"Times New Roman",serif;color:var(--muted);letter-spacing:.3px}
 .calc-bar-ic{flex:none;width:40px;height:40px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#ffd27a,#ef8a3c);color:#fff;box-shadow:0 8px 18px rgba(239,138,60,.3)}
 .calc-bar-ic .i{width:22px;height:22px}
 .calc-bar-tools{display:flex;align-items:center;gap:10px}
-.calc-btn{flex:none;position:relative;width:42px;height:42px;border-radius:50%;border:1px solid rgba(52,172,163,.22);background:var(--card);color:var(--text);box-shadow:0 6px 16px rgba(39,126,143,.1);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s}
-.calc-btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(39,126,143,.16)}
+.calc-btn{flex:none;position:relative;width:44px;height:44px;border-radius:16px;border:1px solid rgba(52,172,163,.22);background:linear-gradient(160deg,var(--card),var(--bg2));color:var(--text);box-shadow:0 6px 16px rgba(39,126,143,.14),inset 0 1px 0 rgba(255,255,255,.35);display:grid;place-items:center;padding:0;cursor:pointer;transition:transform .2s,box-shadow .2s,background .2s,border-color .2s}
+.calc-btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(39,126,143,.22),inset 0 1px 0 rgba(255,255,255,.35);border-color:rgba(52,172,163,.45)}
 .calc-btn:active{transform:scale(.92)}
-.calc-btn[aria-pressed="true"]{background:linear-gradient(135deg,#3cc3a2,#208a74);color:#fff;border-color:transparent}
+.calc-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.calc-btn[aria-pressed="true"]{background:linear-gradient(135deg,#3cc3a2,#208a74);color:#fff;border-color:transparent;box-shadow:0 10px 24px rgba(32,138,116,.35),inset 0 1px 0 rgba(255,255,255,.25)}
 .calc-btn .i{position:absolute;width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .calc-btn .ic-to-port,.calc-btn .ic-cmp{display:none}
 .calc-host.is-land .calc-btn .ic-to-land{display:none}
@@ -8936,7 +8951,7 @@ html.kb-open .nm-pop {
 .calc-host{min-height:520px;height:clamp(520px,calc(100dvh - 210px),900px);border-radius:22px}
 .calc-bar{padding:10px 12px}
 .calc-bar-ic{width:36px;height:36px;border-radius:12px}
-.calc-btn{width:40px;height:40px}
+.calc-btn{width:40px;height:40px;border-radius:14px}
 }
 @media (orientation:landscape) and (max-height:520px){
 .calc-host{min-height:420px;height:calc(100dvh - 120px)}
