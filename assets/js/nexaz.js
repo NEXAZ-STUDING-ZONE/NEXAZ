@@ -96,6 +96,15 @@
                 'Library': 'المكتبة',
                 'Achievements': 'الإنجازات',
                 'Settings': 'الإعدادات',
+                'Profile': 'الملف الشخصي',
+                'How you appear in NEXAZ': 'طريقة ظهورك في NEXAZ',
+                'Preferences': 'التفضيلات',
+                'Language and appearance': 'اللغة والمظهر',
+                'Effects and volume': 'المؤثرات ومستوى الصوت',
+                'Start over with default settings': 'ابدأ من جديد بالإعدادات الافتراضية',
+                'Pending tasks': 'مهام قيد الإنجاز',
+                'Plans today': 'مواعيد اليوم',
+                'Library files': 'ملفات المكتبة',
                 'Light Mode': 'الوضع الفاتح',
                 'Dream': 'احلم',
                 'Plan': 'خطّط',
@@ -2345,6 +2354,8 @@
                 })
             }
 
+            const nxNow = () => window.NXCLOCK ? NXCLOCK.date() : new Date(),
+                nxMs = () => window.NXCLOCK ? NXCLOCK.now() : Date.now();
             const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
             const wkStart = () => 6;
             let wk = 0,
@@ -2356,7 +2367,7 @@
                 };
 
             function weekDays(off) {
-                const t = new Date();
+                const t = nxNow();
                 t.setHours(0, 0, 0, 0);
                 const st = new Date(t);
                 st.setDate(t.getDate() - ((t.getDay() - wkStart() + 7) % 7) + off * 7);
@@ -2378,7 +2389,7 @@
             };
             const selIdx = () => {
                 if (ttSel >= 0 && ttSel < 7) return ttSel;
-                const td = ymd(new Date()),
+                const td = ymd(nxNow()),
                     i = weekDays(wk).findIndex(d => ymd(d) === td);
                 return i >= 0 ? i : 0
             };
@@ -2398,7 +2409,7 @@
                 const g = $('#ttGrid');
                 if (!g) return;
                 const days = weekDays(wk),
-                    td = ymd(new Date()),
+                    td = ymd(nxNow()),
                     si = selIdx();
                 $('#wkLbl').textContent = days[0].toLocaleDateString(loc(), {
                     day: 'numeric',
@@ -2516,7 +2527,7 @@
                     tpSync();
                     return
                 }
-                const now = new Date();
+                const now = nxNow();
                 let h = hs === '' ? (now.getHours() % 12 || 12) : Math.min(+hs, 23),
                     ap = tA.value;
                 if (hs !== '') {
@@ -2715,7 +2726,7 @@
                     }).catch(() => {})
                 } catch (x) {}
                 if (!en.time) return;
-                const now = new Date(),
+                const now = nxNow(),
                     k = ymd(now),
                     on = en.rep ? en.day === now.getDay() : en.date === k,
                     [h, m] = en.time.split(':').map(Number);
@@ -2725,7 +2736,7 @@
                 }
             }
             const dateFor = (day, rep) => {
-                const t0 = new Date();
+                const t0 = nxNow();
                 t0.setHours(0, 0, 0, 0);
                 let d = weekDays(wk).find(x => x.getDay() === day);
                 if (!rep && d < t0) {
@@ -2773,8 +2784,8 @@
                     done: {}
                 });
                 if (timeMoved) renotify(en);
-                const todayK = ymd(new Date());
-                if (ymd(d) === todayK || (rep && day === new Date().getDay())) S.nfired['d:' + todayK] = 1;
+                const todayK = ymd(nxNow());
+                if (ymd(d) === todayK || (rep && day === nxNow().getDay())) S.nfired['d:' + todayK] = 1;
                 const ws = weekDays(0)[0];
                 wk = Math.floor(Math.round((d - ws) / 864e5) / 7);
                 ttSel = weekDays(wk).findIndex(x => ymd(x) === ymd(d));
@@ -2894,7 +2905,7 @@
                     return
                 }
                 try {
-                    const k = (go && go.k) || ymd(new Date()),
+                    const k = (go && go.k) || ymd(nxNow()),
                         d = new Date(k + 'T00:00:00');
                     if (!isNaN(d)) {
                         const ws = weekDays(0)[0];
@@ -2938,10 +2949,10 @@
             });
 
             function fireN(msg, go, urgent) {
-                const nid = Date.now() + Math.random();
+                const nid = nxMs() + Math.random();
                 S.notif.push({
                     id: nid,
-                    ts: Date.now(),
+                    ts: nxMs(),
                     msg,
                     read: 0,
                     go: go || null
@@ -3115,7 +3126,7 @@
             notifRefresh();
 
             function checkSchedule() {
-                const now = new Date(),
+                const now = nxNow(),
                     k = ymd(now),
                     items = ttFor(now).filter(e => !(e.done && e.done[k])),
                     ar = isAr();
@@ -3159,7 +3170,7 @@
                         }, true)
                     }
                 });
-                const cut = ymd(new Date(Date.now() - 14 * 864e5));
+                const cut = ymd(new Date(nxMs() - 14 * 864e5));
                 Object.keys(S.nfired).forEach(key => {
                     if (key.slice(2, 12) < cut) {
                         delete S.nfired[key];
@@ -3289,10 +3300,10 @@
                         items = [],
                         pend = S.tasks.filter(x => !x.d).length;
                     for (let n = 0; n < 14; n++) {
-                        const d = new Date();
+                        const d = nxNow();
                         d.setDate(d.getDate() + n);
                         const k = ymd(d),
-                            at = (h, m) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m).getTime(),
+                            at = (h, m) => window.NXCLOCK ? NXCLOCK.epoch(d.getFullYear(), d.getMonth(), d.getDate(), h, m) : new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m).getTime(),
                             its = ttFor(d).filter(e => !(e.done && e.done[k]));
                         if (its.length && !S.nfired['d:' + k]) items.push({
                             key: 'd:' + k,
@@ -3348,7 +3359,8 @@
                     await swPut('sched', {
                         items,
                         lang: S.lang,
-                        at: Date.now()
+                        at: nxMs(),
+                        off: window.NXCLOCK ? NXCLOCK.off() : 0
                     });
                     lastSched = items;
                     pushSend(items)
@@ -3358,7 +3370,7 @@
 
             function armNext(items) {
                 clearTimeout(nextT);
-                const n = Date.now(),
+                const n = nxMs(),
                     f = items.map(x => x.ts).filter(t => t > n);
                 if (!f.length) return;
                 nextT = setTimeout(() => {
@@ -3419,6 +3431,15 @@
             addEventListener('online', () => {
                 checkSchedule();
                 setupBG()
+            });
+            setInterval(() => {
+                if (curView === 'home') renderHome()
+            }, 15000);
+            addEventListener('nexa:clock', () => {
+                renderHome();
+                renderTT();
+                checkSchedule();
+                queueSync()
             });
             queueSync();
             let bgAt = 0;
@@ -5426,6 +5447,24 @@
                 const n = (S.name || '').trim() || tr('Student'),
                     ar = S.lang === 'ar';
                 $('#hmKeep').innerHTML = `<span class="em">🏆</span><span><b>${ar?'كمّل يا '+esc(n)+'!':'Keep going, '+esc(n)+'!'}</b><small>${ar?'أنت بتبلي كويس!':'You’re doing great!'}</small></span>`
+                const hn = nxNow(),
+                    hk = ymd(hn),
+                    sv = (id, v) => {
+                        const e = document.getElementById(id);
+                        if (e && e.textContent !== String(v)) e.textContent = v
+                    };
+                sv('hmClock', hn.toLocaleTimeString(loc(), {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }));
+                sv('hmDate', hn.toLocaleDateString(loc(), {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                }));
+                sv('hmPend', S.tasks.filter(x => !x.d).length);
+                sv('hmPlans', ttFor(hn).filter(e => !(e.done && e.done[hk])).length);
+                sv('hmBooks', S.books.length)
             }
             $('#hmTasks').addEventListener('click', e => {
                 const c = e.target.closest('[data-hid]');

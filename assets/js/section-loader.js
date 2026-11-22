@@ -135,11 +135,10 @@
             o.setAttribute('role', 'status');
             o.setAttribute('aria-live', 'polite');
             o.setAttribute('aria-busy', 'true');
-            o.innerHTML = '<div class="nx-secload-ring"></div><b></b><small></small><div class="nx-secload-bar"><i></i></div>';
+            o.innerHTML = '<div class="nx-secload-ring"></div>';
             view.appendChild(o);
         }
-        o.querySelector('b').textContent = ar() ? 'جارٍ جلب الملفات…' : 'Loading your files…';
-        o.querySelector('small').textContent = ar() ? 'لحظات من فضلك' : 'Just a moment';
+        o.setAttribute('aria-label', ar() ? 'جارٍ التحميل' : 'Loading');
         return o;
     }
 
