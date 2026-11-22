@@ -90,6 +90,7 @@
     function drop(c) {
         if (!c) return;
         c.view.classList.remove('nx-loading');
+        c.view.classList.remove('nx-show');
         c.o.classList.remove('out');
     }
 
@@ -103,11 +104,13 @@
         var o = overlay(view);
         o.classList.remove('out');
         view.classList.add('nx-loading');
+        view.classList.add('nx-show');
         current = { id: id, view: view, o: o };
         var done = false;
         function finish() {
             if (done || my !== token) return;
             done = true;
+            view.classList.remove('nx-loading');
             o.classList.add('out');
             setTimeout(function () {
                 if (my === token) drop(current);
@@ -124,7 +127,7 @@
 
     window.addEventListener('hashchange', function () {
         var id = currentId();
-        if (current && current.id === id && current.view.classList.contains('nx-loading')) return;
+        if (current && current.id === id && current.view.classList.contains('nx-show')) return;
         show(id);
     });
     show(currentId());
