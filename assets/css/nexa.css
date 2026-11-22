@@ -9006,7 +9006,9 @@ html.kb-open .nm-pop {
 .cc-code{padding:16px 16px 14px;font:500 13.5px/2 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;color:#d6e4ea;letter-spacing:0;text-transform:none;overflow-x:auto}
 .cc-line{display:flex;align-items:center;white-space:nowrap}
 .cc-ln{flex:none;width:22px;margin-right:14px;text-align:right;color:#4f6778;user-select:none;-webkit-user-select:none}
-.cc-t{display:inline-block;overflow:hidden;white-space:pre;vertical-align:bottom;width:calc(var(--n) * 1ch);animation:ccType .9s steps(var(--n)) var(--d) both}
+.cc-t{display:inline-block;overflow:hidden;white-space:pre;vertical-align:bottom;width:calc(var(--n) * 1ch)}
+.cc-frame:not(.cc-go) .cc-t{width:0}
+.cc-go .cc-t{animation:ccType var(--t,2s) steps(var(--n)) var(--d) both}
 @keyframes ccType{from{width:0}}
 .cc-k{color:#c792ea}
 .cc-v{color:#82aaff}
@@ -9015,7 +9017,9 @@ html.kb-open .nm-pop {
 .cc-f{color:#ffcb6b}
 .cc-p{color:#3cc3a2;font-weight:700}
 .cc-ok{color:#8ff5de}
-.cc-cur{display:inline-block;flex:none;width:8px;height:16px;margin-left:5px;background:#8ff5de;box-shadow:0 0 10px rgba(143,245,222,.7);animation:ccShow 0s 3.4s both,ccBlink 1s steps(1) 3.4s infinite}
+.cc-cur{display:inline-block;flex:none;width:8px;height:16px;margin-left:5px;background:#8ff5de;box-shadow:0 0 10px rgba(143,245,222,.7)}
+.cc-frame:not(.cc-go) .cc-cur{opacity:0}
+.cc-go .cc-cur{animation:ccShow 0s 9.3s both,ccBlink 1s steps(1) 9.3s infinite}
 @keyframes ccShow{from{opacity:0}to{opacity:1}}
 @keyframes ccBlink{50%{opacity:0}}
 .cc-stat{display:flex;align-items:center;gap:8px;padding:7px 14px;font:600 11px ui-monospace,Menlo,Consolas,monospace;letter-spacing:0;text-transform:none;color:#7d93a0;background:rgba(60,195,162,.1);border-top:1px solid rgba(255,255,255,.05)}
@@ -9023,4 +9027,5 @@ html.kb-open .nm-pop {
 .cc-stat em{margin-left:auto;font-style:normal}
 .cc-dot{width:8px;height:8px;border-radius:50%;background:#3cc3a2;box-shadow:0 0 0 0 rgba(60,195,162,.6);animation:ccPulse 1.8s ease-out infinite}
 @keyframes ccPulse{to{box-shadow:0 0 0 8px rgba(60,195,162,0)}}
-@media (prefers-reduced-motion:reduce){.cc-t{animation:none;width:auto}.cc-cur,.cc-frame,.cc-dot{animation:none}}
+@media (prefers-reduced-motion:reduce){.cc-frame:not(.cc-go) .cc-t{width:calc(var(--n) * 1ch)}.cc-frame:not(.cc-go) .cc-cur{opacity:1}.cc-go .cc-t,.cc-go .cc-cur,.cc-frame,.cc-dot{animation:none}}
+body.nx-sec-loading .nn-fab{display:none!important}

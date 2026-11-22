@@ -161,3 +161,42 @@
 .fx-stage.nx-resizing { transition: none; user-select: none; -webkit-user-select: none; }
 .fx-stage.nx-resizing .fx-ring,
 .fx-stage.nx-resizing .fx-time { transition: none; }
+.nx-trash {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 9600;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #8ff5de;
+  background: linear-gradient(145deg, rgba(16, 44, 54, .94), rgba(7, 22, 32, .96));
+  border: 1px solid rgba(143, 245, 222, .4);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .4), 0 0 20px rgba(72, 205, 178, .3);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 120px) scale(.8);
+  transition: transform .28s cubic-bezier(.2, .9, .3, 1.2), opacity .2s, background .2s, border-color .2s, color .2s, box-shadow .2s;
+}
+.nx-trash.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+.nx-trash.hot {
+  transform: translate(-50%, -4px) scale(1.25);
+  color: #fff;
+  background: linear-gradient(145deg, #ff7b7b, #e5484d);
+  border-color: rgba(255, 255, 255, .6);
+  box-shadow: 0 0 0 8px rgba(229, 72, 77, .22), 0 14px 30px rgba(229, 72, 77, .4);
+}
+.nx-trash svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.nx-trash .lid { transform-origin: 6px 7px; transition: transform .2s; }
+.nx-trash.hot .lid { transform: rotate(-22deg) translateY(-1px); }
+.nx-bubble.to-trash { transform: scale(.7); opacity: .8; }
