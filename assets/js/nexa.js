@@ -450,6 +450,20 @@
 
             function render() {
                 $('#allTasks').innerHTML = S.tasks.slice().sort((a, b) => (ORD[a.p] - ORD[b.p]) || (a.id - b.id)).filter(x => mq(x.t) && (flt === 'all' || (flt === 'done') === !!x.d)).map(x => taskRow(x, 1)).join('') || `<p style="color:var(--muted)">${tr(S.tasks.length?'Nothing found':'No tasks yet. Add your first task above.')}</p>`;
+                {
+                    const tot = S.tasks.length,
+                        dn = S.tasks.filter(x => x.d).length,
+                        pc = tot ? Math.round(dn / tot * 100) : 0,
+                        r = $('#tkSum');
+                    if (r) {
+                        r.style.setProperty('--p', pc);
+                        $('#tkPct').textContent = pc + '%';
+                        $('#tkA').textContent = tot - dn;
+                        $('#tkD').textContent = dn;
+                        $('#tkTxt').textContent = dn + ' / ' + tot + ' ' + tr('Tasks completed');
+                        $('#tkBar').style.width = pc + '%'
+                    }
+                }
                 const cnt = s => S.books.filter(b => s === 'All' || b.s === s).length;
                 $('#subj').innerHTML = ['All', ...S.subjects].map(s => `<button class="chip ${s===subj?'on':''}" data-s="${esc(s)}">${esc(s==='All'?tr('All subjects'):tr(s))} (${cnt(s)})</button>`).join('');
                 S.books.forEach((x, i) => {
@@ -3079,6 +3093,8 @@
             })();
             Object.assign(AR, {
                 'Calculator': 'الآلة الحاسبة',
+                'Your progress': 'تقدمك',
+                'Tasks completed': 'مهام مكتملة',
                 '7 tools in one place': '٧ أدوات في مكان واحد',
                 'Saved on your device': 'محفوظ على جهازك',
                 'Arabic & English': 'العربية والإنجليزية',
