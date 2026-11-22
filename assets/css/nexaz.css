@@ -9143,3 +9143,742 @@ a.user{color:inherit;text-decoration:none;cursor:pointer}
 .calc-tip i{width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#3cc3a2,#ef8a3c)}
 .calc-host.is-fs .calc-tips,.calc-host.is-fs .calc-deco{display:none}
 @media (max-height:700px){.calc-tips{display:none}}
+
+#nav a {
+    --nc: #2fb7a0;
+    font-family: "Readex Pro", Cairo, Tajawal, Alexandria, Manrope, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    gap: 12px;
+    padding: 0 10px;
+    border-radius: 16px;
+    overflow: hidden;
+    isolation: isolate;
+    color: var(--text);
+    transition: background .25s, transform .25s cubic-bezier(.3, 1.4, .5, 1), color .25s, box-shadow .25s
+}
+
+#nav a:nth-child(1) { --nc: #2fb7a0 }
+#nav a:nth-child(2) { --nc: #4f8fe8 }
+#nav a:nth-child(3) { --nc: #f08a3c }
+#nav a:nth-child(4) { --nc: #22b573 }
+#nav a:nth-child(5) { --nc: #e7a92b }
+#nav a:nth-child(6) { --nc: #e0607e }
+#nav a:nth-child(7) { --nc: #7a64e0 }
+#nav a:nth-child(8) { --nc: #1fa6c9 }
+#nav a:nth-child(9) { --nc: #5d7fa0 }
+#nav a:nth-child(10) { --nc: #6b8a82 }
+
+#nav a .i {
+    box-sizing: content-box;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    padding: 6px;
+    border-radius: 12px;
+    stroke-width: 2;
+    color: var(--nc);
+    background: color-mix(in srgb, var(--nc) 15%, transparent);
+    transition: transform .35s cubic-bezier(.3, 1.6, .5, 1), background .25s, color .25s, box-shadow .25s
+}
+
+#nav a span {
+    letter-spacing: 0;
+    white-space: nowrap;
+    transition: transform .25s
+}
+
+#nav a:hover {
+    transform: translateX(4px);
+    background: color-mix(in srgb, var(--nc) 10%, transparent);
+    color: var(--text)
+}
+
+[dir="rtl"] #nav a:hover {
+    transform: translateX(-4px)
+}
+
+#nav a:hover .i {
+    transform: rotate(-9deg) scale(1.1);
+    background: var(--nc);
+    color: #fff;
+    box-shadow: 0 6px 14px color-mix(in srgb, var(--nc) 40%, transparent)
+}
+
+#nav a:active {
+    transform: scale(.96)
+}
+
+#nav a.on,
+#nav a.active,
+#nav a[aria-current="page"] {
+    background: linear-gradient(110deg, var(--nc), color-mix(in srgb, var(--nc) 62%, #fff));
+    color: #fff;
+    font-weight: 800;
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--nc) 38%, transparent)
+}
+
+#nav a.on span {
+    color: #fff
+}
+
+#nav a.on .i,
+#nav a.active .i {
+    background: rgba(255, 255, 255, .24);
+    color: #fff;
+    box-shadow: none
+}
+
+#nav a.on::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: 12px;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    margin-top: -3.5px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, .55);
+    animation: nxNavPulse 2.2s ease-out infinite
+}
+
+#nav a.on::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .28) 50%, transparent 70%);
+    transform: translateX(-120%);
+    animation: nxNavShine 3.8s ease-in-out infinite
+}
+
+[dir="rtl"] #nav a.on::before {
+    transform: translateX(120%);
+    animation-name: nxNavShineRtl
+}
+
+:root[data-theme="dark"] #nav a {
+    color: var(--text)
+}
+
+:root[data-theme="dark"] #nav a:hover {
+    background: color-mix(in srgb, var(--nc) 16%, transparent)
+}
+
+:root[data-theme="dark"] #nav a .i {
+    background: color-mix(in srgb, var(--nc) 22%, transparent)
+}
+
+:root[data-theme="dark"] #nav a.on {
+    background: linear-gradient(110deg, color-mix(in srgb, var(--nc) 78%, #000), color-mix(in srgb, var(--nc) 50%, #000));
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .35)
+}
+
+@keyframes nxNavPulse {
+    to { box-shadow: 0 0 0 8px rgba(255, 255, 255, 0) }
+}
+
+@keyframes nxNavShine {
+    0%, 55% { transform: translateX(-120%) }
+    100% { transform: translateX(120%) }
+}
+
+@keyframes nxNavShineRtl {
+    0%, 55% { transform: translateX(120%) }
+    100% { transform: translateX(-120%) }
+}
+
+@keyframes nxNavIn {
+    from { opacity: 0; transform: translateX(-14px) }
+    to { opacity: 1; transform: none }
+}
+
+@keyframes nxNavInRtl {
+    from { opacity: 0; transform: translateX(14px) }
+    to { opacity: 1; transform: none }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    #nav a { animation: nxNavIn .5s cubic-bezier(.2, .8, .2, 1) both }
+    [dir="rtl"] #nav a { animation-name: nxNavInRtl }
+    #nav a:nth-child(2) { animation-delay: .04s }
+    #nav a:nth-child(3) { animation-delay: .08s }
+    #nav a:nth-child(4) { animation-delay: .12s }
+    #nav a:nth-child(5) { animation-delay: .16s }
+    #nav a:nth-child(6) { animation-delay: .2s }
+    #nav a:nth-child(7) { animation-delay: .24s }
+    #nav a:nth-child(8) { animation-delay: .28s }
+    #nav a:nth-child(9) { animation-delay: .32s }
+    #nav a:nth-child(10) { animation-delay: .36s }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #nav a.on::before,
+    #nav a.on::after { animation: none }
+}
+
+body.side-collapsed #nav a,
+body.side-collapsed #nav a.on {
+    padding: 0;
+    justify-content: center
+}
+
+body.side-collapsed #nav a.on::after,
+body.side-collapsed #nav a.on::before {
+    display: none
+}
+
+@media (max-width: 900px) {
+    #nav a,
+    #nav a.on {
+        padding: 0;
+        justify-content: center
+    }
+
+    #nav a.on::after,
+    #nav a.on::before {
+        display: none
+    }
+}
+
+@media (max-width: 640px) {
+    #nav a:hover {
+        transform: none
+    }
+
+    #nav a .i {
+        padding: 7px
+    }
+}
+
+@media (min-width: 641px) {
+    .app {
+        padding-inline-end: 0;
+        column-gap: 0
+    }
+
+    .main {
+        padding-inline: 20px
+    }
+
+    .main>.top {
+        margin-inline: -20px;
+        padding-inline: 20px
+    }
+
+    .side {
+        border-start-end-radius: 0
+    }
+}
+
+@media (max-width: 640px) {
+    .app {
+        padding-inline: 0
+    }
+
+    .main {
+        padding-inline: 14px
+    }
+
+    .main>.top {
+        margin-inline: -14px;
+        padding-inline: 14px
+    }
+}
+
+.tt-bar {
+    position: relative;
+    overflow: hidden;
+    padding: 12px 14px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--acc) 9%, var(--card)), var(--card) 60%);
+    border: 1px solid color-mix(in srgb, var(--acc) 22%, var(--line))
+}
+
+.nt-week {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 99px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    box-shadow: 0 4px 14px rgba(30, 90, 80, .07)
+}
+
+#wkLbl {
+    min-width: 170px;
+    padding: 0 6px;
+    color: var(--text);
+    font-size: 13.5px;
+    font-weight: 800
+}
+
+.nt-week .b {
+    transition: background .2s, color .2s, transform .2s
+}
+
+.nt-week .b:hover {
+    background: var(--acc);
+    color: #fff
+}
+
+#wkToday {
+    background: var(--act);
+    color: var(--acc)
+}
+
+#ttNew {
+    gap: 8px;
+    border-radius: 99px;
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--acc) 32%, transparent);
+    transition: transform .2s, box-shadow .2s
+}
+
+#ttNew:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px color-mix(in srgb, var(--acc) 42%, transparent)
+}
+
+#ttNew .i {
+    transition: transform .3s
+}
+
+#ttNew:hover .i {
+    transform: rotate(90deg)
+}
+
+.tt-grid {
+    gap: 14px
+}
+
+.tt-day {
+    position: relative;
+    overflow: hidden;
+    padding: 12px;
+    gap: 12px;
+    border-radius: 24px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 4%, var(--card)), var(--card) 90px);
+    transition: transform .25s cubic-bezier(.3, 1.4, .5, 1), box-shadow .25s, border-color .25s
+}
+
+.tt-day::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--acc), color-mix(in srgb, var(--acc) 40%, #7fd6ff));
+    opacity: .55;
+    transition: opacity .25s
+}
+
+.tt-day:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 36px rgba(20, 70, 60, .14)
+}
+
+.tt-day:hover::before {
+    opacity: 1
+}
+
+.tt-day.today {
+    border-color: color-mix(in srgb, var(--acc) 70%, transparent);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--acc) 13%, var(--card)), var(--card) 130px);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc) 18%, transparent), 0 14px 30px rgba(30, 130, 110, .16)
+}
+
+.tt-day.today::before {
+    opacity: 1;
+    height: 5px
+}
+
+.tt-h {
+    padding: 8px 2px 12px;
+    border-bottom: 1px solid var(--line)
+}
+
+.tt-h b {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0;
+    overflow-wrap: break-word
+}
+
+.tt-h small {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 9px;
+    border-radius: 99px;
+    background: var(--act);
+    color: var(--acc);
+    font-size: 11px;
+    font-weight: 800
+}
+
+.tt-day.today .tt-h small {
+    background: var(--acc);
+    color: #fff
+}
+
+.tt-add {
+    width: 30px;
+    height: 30px;
+    background: color-mix(in srgb, var(--acc) 14%, transparent);
+    transition: transform .3s cubic-bezier(.3, 1.6, .5, 1), background .2s, color .2s, box-shadow .2s
+}
+
+.tt-add:hover {
+    box-shadow: 0 6px 14px color-mix(in srgb, var(--acc) 40%, transparent);
+    transform: rotate(90deg) scale(1.1)
+}
+
+.tt-list {
+    gap: 9px
+}
+
+.tt-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 92px;
+    border: 2px dashed color-mix(in srgb, var(--acc) 35%, var(--line));
+    border-radius: 18px;
+    background: color-mix(in srgb, var(--acc) 4%, transparent);
+    transition: border-color .2s, color .2s, background .2s, transform .2s
+}
+
+.tt-empty::before {
+    content: "+";
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--acc) 16%, transparent);
+    color: var(--acc);
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1;
+    transition: transform .3s cubic-bezier(.3, 1.6, .5, 1), background .2s, color .2s
+}
+
+.tt-empty:hover {
+    background: color-mix(in srgb, var(--acc) 10%, transparent);
+    transform: translateY(-2px)
+}
+
+.tt-empty:hover::before {
+    background: var(--acc);
+    color: #fff;
+    transform: rotate(90deg) scale(1.1)
+}
+
+.tt-e {
+    gap: 7px;
+    padding: 11px 40px 11px 14px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--c) 28%, transparent);
+    border-inline-start: 5px solid var(--c);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--c) 24%, var(--card)), color-mix(in srgb, var(--c) 10%, var(--card)));
+    box-shadow: 0 3px 10px color-mix(in srgb, var(--c) 14%, transparent);
+    transition: transform .25s cubic-bezier(.3, 1.4, .5, 1), box-shadow .25s, opacity .2s
+}
+
+[dir="rtl"] .tt-e {
+    padding: 11px 14px 11px 40px
+}
+
+.tt-e:hover {
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: 0 12px 24px color-mix(in srgb, var(--c) 30%, transparent)
+}
+
+.tt-e:active {
+    transform: scale(.98)
+}
+
+.tt-tm {
+    padding: 3px 10px;
+    box-shadow: 0 3px 8px color-mix(in srgb, var(--c) 40%, transparent)
+}
+
+.tt-m {
+    font-size: 13.5px;
+    font-weight: 800
+}
+
+.tt-ck {
+    top: 10px;
+    width: 26px;
+    height: 26px;
+    background: color-mix(in srgb, var(--card) 70%, transparent);
+    transition: transform .25s cubic-bezier(.3, 1.8, .5, 1), background .2s
+}
+
+.tt-ck:hover {
+    transform: scale(1.15)
+}
+
+.tt-e.done {
+    opacity: .66
+}
+
+.tt-sp {
+    border-radius: 22px;
+    transition: transform .25s cubic-bezier(.3, 1.6, .5, 1), background .2s, box-shadow .2s
+}
+
+.tt-sp:hover {
+    transform: translateY(-3px)
+}
+
+.tt-sp.today {
+    border-color: var(--acc)
+}
+
+.tt-sp.on {
+    transform: translateY(-2px) scale(1.04)
+}
+
+@media (max-width: 1180px) {
+    .tt-e {
+        padding: 12px 48px 12px 14px
+    }
+
+    [dir="rtl"] .tt-e {
+        padding: 12px 14px 12px 48px
+    }
+
+    .tt-ck {
+        margin-top: -13px
+    }
+}
+
+.nx-secload {
+    gap: 12px;
+    background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--acc) 12%, var(--bg2)), var(--bg2) 70%)
+}
+
+.nx-crop {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(8, 18, 16, .62);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    transition: opacity .2s
+}
+
+.nx-crop.in {
+    opacity: 1
+}
+
+.nx-crop-card {
+    width: min(400px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 18px;
+    border-radius: 28px;
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, .4);
+    transform: translateY(18px) scale(.97);
+    transition: transform .25s cubic-bezier(.2, .9, .3, 1.2)
+}
+
+.nx-crop.in .nx-crop-card {
+    transform: none
+}
+
+.nx-crop-hd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px
+}
+
+.nx-crop-hd b {
+    font-size: 16px;
+    font-weight: 800
+}
+
+.nx-crop-x {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--act);
+    color: var(--text);
+    cursor: pointer;
+    padding: 0;
+    transition: transform .2s, background .2s
+}
+
+.nx-crop-x:hover {
+    transform: rotate(90deg);
+    background: color-mix(in srgb, var(--acc) 25%, var(--act))
+}
+
+.nx-crop-x svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.6;
+    stroke-linecap: round
+}
+
+.nx-crop-stage {
+    position: relative;
+    align-self: center;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #0b1512;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none
+}
+
+.nx-crop-stage.drag {
+    cursor: grabbing
+}
+
+.nx-crop-stage img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    max-width: none;
+    pointer-events: none;
+    will-change: transform
+}
+
+.nx-crop-mask {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, .95);
+    box-shadow: 0 0 0 999px rgba(8, 18, 16, .58)
+}
+
+.nx-crop-mask::before,
+.nx-crop-mask::after {
+    content: "";
+    position: absolute;
+    background: rgba(255, 255, 255, .28)
+}
+
+.nx-crop-mask::before {
+    inset-inline: 0;
+    top: 33.33%;
+    height: 33.34%;
+    border-block: 1px solid rgba(255, 255, 255, .28);
+    background: none
+}
+
+.nx-crop-mask::after {
+    inset-block: 0;
+    left: 33.33%;
+    width: 33.34%;
+    border-inline: 1px solid rgba(255, 255, 255, .28);
+    background: none
+}
+
+.nx-crop-zoom {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    direction: ltr
+}
+
+.nx-crop-zoom button {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--act);
+    color: var(--acc);
+    font: 800 18px/1 inherit;
+    cursor: pointer;
+    padding: 0;
+    transition: transform .2s, background .2s, color .2s
+}
+
+.nx-crop-zoom button:hover {
+    background: var(--acc);
+    color: #fff;
+    transform: scale(1.08)
+}
+
+.nx-crop-zoom input {
+    flex: 1;
+    min-width: 0;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 99px;
+    outline: 0;
+    background: linear-gradient(90deg, var(--acc) var(--p, 0%), color-mix(in srgb, var(--acc) 20%, var(--line)) var(--p, 0%))
+}
+
+.nx-crop-zoom input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: var(--acc);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
+    cursor: pointer
+}
+
+.nx-crop-zoom input::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    background: var(--acc);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .3);
+    cursor: pointer
+}
+
+.nx-crop-hint {
+    margin: 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted)
+}
+
+.nx-crop-ft {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end
+}
+
+.nx-crop-ft .btn {
+    min-width: 96px;
+    justify-content: center;
+    cursor: pointer
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nx-crop,
+    .nx-crop-card { transition: none }
+}
