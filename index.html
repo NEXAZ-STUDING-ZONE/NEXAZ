@@ -5,10 +5,10 @@
     <script src="assets/js/preload.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>NEXAZ</title>
-    <link rel="icon" href="assets/img/nexa-favicon.ico?v=13" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/nexa-tab-32.png?v=13">
-    <link rel="icon" type="image/png" sizes="64x64" href="assets/img/nexa-tab-64.png?v=13">
-    <link rel="apple-touch-icon" href="assets/img/nexa-notif-192.png?v=13">
+    <link rel="icon" href="assets/img/nexaz-favicon.ico?v=14" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/nexaz-tab-32.png?v=14">
+    <link rel="icon" type="image/png" sizes="64x64" href="assets/img/nexaz-tab-64.png?v=14">
+    <link rel="apple-touch-icon" href="assets/img/nexaz-notif-192.png?v=14">
     <meta name="theme-color" content="#f1fbfa">
     <link rel="manifest" href="app.webmanifest">
     <meta name="mobile-web-app-capable" content="yes">
@@ -17,9 +17,9 @@
     <meta name="apple-mobile-web-app-title" content="NEXAZ">
     <link rel="stylesheet" href="assets/css/typefaces.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="assets/css/typefaces.css"></noscript>
-    <link rel="stylesheet" href="assets/css/nexa.css?v=13">
-    <link rel="stylesheet" href="assets/css/nexa-wordmark.css">
-    <link rel="stylesheet" href="assets/css/timer-mini.css?v=13">
+    <link rel="stylesheet" href="assets/css/nexaz.css?v=14">
+    <link rel="stylesheet" href="assets/css/nexaz-wordmark.css">
+    <link rel="stylesheet" href="assets/css/timer-mini.css?v=14">
     <script>
         (function () {
             var LIGHT = '#f3f9f9', DARK = '#101b19';
@@ -131,11 +131,10 @@
                 <a href="#/about" data-v="about"><svg class="i"><use href="#i-info"/></svg><span data-t>About</span></a>
                 <a href="#/settings" data-v="settings"><svg class="i"><use href="#i-gear"/></svg><span data-t>Settings</span></a>
             </nav>
-            <a class="side-profile" href="#/settings" title="Settings" aria-label="Settings">
+            <div class="side-profile">
                 <div class="profile-avatar" id="sideAv">S</div>
                 <div class="profile-meta"><b id="sideName">Student</b><span data-t>Personal Workspace</span></div>
-                <svg class="i profile-chevron flip" aria-hidden="true"><use href="#i-go"/></svg>
-            </a>
+            </div>
         </aside>
         <section class="main">
             <header class="top">
@@ -190,7 +189,7 @@
                     <form class="form" id="addF"><input id="tin" required maxlength="200" data-ph="Add a new task…" placeholder="Add a new task…" aria-label="New task"><select id="tpr" aria-label="Difficulty"><option value="Low" data-t>Easy</option><option value="Medium" selected data-t>Medium</option><option value="High" data-t>Hard</option></select><button class="btn" type="submit"><span data-t>Add</span></button></form>
                 </div>
                 <div class="chips" id="flt"><button class="chip on" data-f="all" data-t>All</button><button class="chip" data-f="act" data-t>Active</button><button class="chip" data-f="done" data-t>Done</button></div>
-                <p class="nt-hint" data-t>Sorted from easiest to hardest</p>
+                <p class="nt-hint"><span id="tkHint">Sorted from easiest to hardest</span><button type="button" class="nt-reset" id="tkReset" hidden data-t>Reset order</button></p>
                 <div class="card">
                     <div id="allTasks"></div>
                 </div>
@@ -221,9 +220,15 @@
                             <button type="button" class="calc-btn" id="calcFs" aria-pressed="false" aria-label="Full screen" title="Full screen"><svg class="i ic-exp" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i ic-cmp" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
                         </div>
                     </div>
+                    <div class="calc-deco" aria-hidden="true"></div>
                     <div class="calc-mount" id="cxMount"></div>
+                    <div class="calc-tips">
+                        <span class="calc-tip"><i></i><span data-t>Type with your keyboard</span></span>
+                        <span class="calc-tip"><i></i><span data-t>SHIFT and ALPHA unlock more functions</span></span>
+                        <span class="calc-tip"><i></i><span data-t>Landscape view for a bigger screen</span></span>
+                    </div>
                 </div>
-                <template id="cxTpl"><link rel="stylesheet" href="assets/css/calculator.css?v=13"><div class="cxs" id="cxs"><div class="fit" id="fit"><div class="calc" id="calc">
+                <template id="cxTpl"><link rel="stylesheet" href="assets/css/calculator.css?v=14"><div class="cxs" id="cxs"><div class="fit" id="fit"><div class="calc" id="calc">
  <div class="brand"><span class="b1">fx-991</span><span class="b2">SCIENTIFIC CALCULATOR</span><span class="solar"><i></i><i></i><i></i><i></i></span></div>
  <div class="lcd" id="lcd"><div class="sb" id="sb"></div><div class="ex" id="ex"></div><div class="rs" id="rs">0</div><div class="bt" id="bt" hidden></div><div class="sp" id="sp"><div class="spt" id="spt"></div><div class="sph">TAP SCREEN OR PRESS AC TO WAKE</div></div></div>
  <div id="kp"></div>
@@ -406,9 +411,9 @@
     <script src="assets/js/color-picker.js"></script>
     <script defer src="assets/js/pdf-core.js"></script>
     <script defer src="assets/js/board-host.js"></script>
-    <script defer src="assets/js/nexa.js?v=13"></script>
-    <script defer src="assets/js/calculator.js?v=13"></script>
-    <script defer src="assets/js/timer-mini.js?v=13"></script>
-    <script defer src="assets/js/section-loader.js?v=13"></script>
+    <script defer src="assets/js/nexaz.js?v=14"></script>
+    <script defer src="assets/js/calculator.js?v=14"></script>
+    <script defer src="assets/js/timer-mini.js?v=14"></script>
+    <script defer src="assets/js/section-loader.js?v=14"></script>
 </body>
 </html>
