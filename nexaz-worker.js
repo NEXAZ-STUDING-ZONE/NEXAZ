@@ -22,7 +22,7 @@ async function showDueReminders() {
   const sched = await kvGet('sched');
   if (!sched || !Array.isArray(sched.items)) return;
   const fired = (await kvGet('fired')) || {};
-  const now = Date.now();
+  const now = Date.now() + (sched.off || 0);
   let changed = false;
   for (const it of sched.items) {
     if (!it || fired[it.key]) continue;
