@@ -88,6 +88,7 @@
     }
 
     function drop(c) {
+        document.body.classList.remove('nx-sec-loading');
         if (!c) return;
         c.view.classList.remove('nx-loading');
         c.view.classList.remove('nx-show');
@@ -105,12 +106,15 @@
         o.classList.remove('out');
         view.classList.add('nx-loading');
         view.classList.add('nx-show');
+        document.body.classList.add('nx-sec-loading');
         current = { id: id, view: view, o: o };
         var done = false;
         function finish() {
             if (done || my !== token) return;
             done = true;
             view.classList.remove('nx-loading');
+            document.body.classList.remove('nx-sec-loading');
+            applyCredit();
             o.classList.add('out');
             setTimeout(function () {
                 if (my === token) drop(current);
@@ -118,6 +122,27 @@
         }
         Promise.all([wait(MIN), fonts(), frames(), images(view), specific(id)]).then(finish, finish);
         setTimeout(finish, MAX);
+    }
+
+    var credit = document.querySelector('.cc-frame');
+    var aboutView = document.getElementById('v-about');
+    var creditRatio = 0;
+
+    function applyCredit() {
+        if (!credit) return;
+        if (creditRatio === 0) credit.classList.remove('cc-go');
+        else if (creditRatio >= 0.6 && !(aboutView && aboutView.classList.contains('nx-loading'))) credit.classList.add('cc-go');
+    }
+
+    if (credit && 'IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) {
+                creditRatio = en.isIntersecting ? en.intersectionRatio : 0;
+            });
+            applyCredit();
+        }, { threshold: [0, 0.6, 1] }).observe(credit);
+    } else if (credit) {
+        credit.classList.add('cc-go');
     }
 
     function currentId() {

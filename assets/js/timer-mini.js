@@ -239,6 +239,21 @@
   rz.addEventListener('pointerup', endResize);
   rz.addEventListener('pointercancel', endResize);
 
+  const trash = document.createElement('div');
+  trash.className = 'nx-trash';
+  trash.setAttribute('aria-hidden', 'true');
+  trash.innerHTML = '<svg viewBox="0 0 24 24"><path class="lid" d="M4 7h16M9 7V4.5h6V7"/><path d="M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/></svg>';
+  document.body.appendChild(trash);
+  const overTrash = () => {
+    const b = bubble.getBoundingClientRect();
+    const r = trash.getBoundingClientRect();
+    return Math.hypot(b.left + b.width / 2 - (r.left + r.width / 2), b.top + b.height / 2 - (r.top + r.height / 2)) < Math.max(72, r.width);
+  };
+  const clearTrash = () => {
+    trash.classList.remove('show');
+    trash.classList.remove('hot');
+    bubble.classList.remove('to-trash');
+  };
   let bdrag = null;
   bubble.addEventListener('pointerdown', e => {
     if (e.button !== 0) return;
@@ -251,13 +266,26 @@
       bdrag.moved = true;
       bubble.classList.add('dragging');
     }
-    if (bdrag.moved) placeBubble(e.clientX - bdrag.dx, e.clientY - bdrag.dy);
+    if (bdrag.moved) {
+      placeBubble(e.clientX - bdrag.dx, e.clientY - bdrag.dy);
+      trash.classList.add('show');
+      const hot = overTrash();
+      trash.classList.toggle('hot', hot);
+      bubble.classList.toggle('to-trash', hot);
+    }
   });
   const endBubbleDrag = e => {
     if (!bdrag || e.pointerId !== bdrag.id) return;
     const moved = bdrag.moved;
     bdrag = null;
     bubble.classList.remove('dragging');
+    const dropped = moved && trash.classList.contains('hot');
+    clearTrash();
+    if (dropped) {
+      setFlag(false);
+      refresh();
+      return;
+    }
     if (!moved) expand();
   };
   bubble.addEventListener('pointerup', endBubbleDrag);
