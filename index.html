@@ -5,10 +5,10 @@
     <script src="assets/js/preload.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>NEXAZ</title>
-    <link rel="icon" href="assets/img/nexa-favicon.ico?v=11" sizes="any">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/nexa-tab-32.png?v=11">
-    <link rel="icon" type="image/png" sizes="64x64" href="assets/img/nexa-tab-64.png?v=11">
-    <link rel="apple-touch-icon" href="assets/img/nexa-notif-192.png?v=11">
+    <link rel="icon" href="assets/img/nexa-favicon.ico?v=13" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/nexa-tab-32.png?v=13">
+    <link rel="icon" type="image/png" sizes="64x64" href="assets/img/nexa-tab-64.png?v=13">
+    <link rel="apple-touch-icon" href="assets/img/nexa-notif-192.png?v=13">
     <meta name="theme-color" content="#f1fbfa">
     <link rel="manifest" href="app.webmanifest">
     <meta name="mobile-web-app-capable" content="yes">
@@ -17,9 +17,9 @@
     <meta name="apple-mobile-web-app-title" content="NEXAZ">
     <link rel="stylesheet" href="assets/css/typefaces.css" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="assets/css/typefaces.css"></noscript>
-    <link rel="stylesheet" href="assets/css/nexa.css?v=11">
+    <link rel="stylesheet" href="assets/css/nexa.css?v=13">
     <link rel="stylesheet" href="assets/css/nexa-wordmark.css">
-    <link rel="stylesheet" href="assets/css/timer-mini.css?v=11">
+    <link rel="stylesheet" href="assets/css/timer-mini.css?v=13">
     <script>
         (function () {
             var LIGHT = '#f3f9f9', DARK = '#101b19';
@@ -131,19 +131,18 @@
                 <a href="#/about" data-v="about"><svg class="i"><use href="#i-info"/></svg><span data-t>About</span></a>
                 <a href="#/settings" data-v="settings"><svg class="i"><use href="#i-gear"/></svg><span data-t>Settings</span></a>
             </nav>
-            <div class="developer-credit" aria-label="Developer credit"><span data-t>DESIGNED &amp; DEVELOPED BY</span><strong>boody_3ta &amp; vaelor</strong></div>
-            <div class="side-profile">
+            <a class="side-profile" href="#/settings" title="Settings" aria-label="Settings">
                 <div class="profile-avatar" id="sideAv">S</div>
                 <div class="profile-meta"><b id="sideName">Student</b><span data-t>Personal Workspace</span></div>
-
-            </div>
+                <svg class="i profile-chevron flip" aria-hidden="true"><use href="#i-go"/></svg>
+            </a>
         </aside>
         <section class="main">
             <header class="top">
                 <button class="theme-btn fs-btn" id="fsBtn" type="button" aria-label="Full screen" title="Full screen"><svg class="i ic-exp"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg class="i ic-cmp"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg></button>
                 <button class="theme-btn" role="switch" id="themeSw" type="button" aria-checked="true" aria-label="Dark mode" title="Dark mode"><svg class="i ic-moon"><use href="#i-moon"/></svg><svg class="i ic-sun"><use href="#i-sun"/></svg></button>
                 <button class="ib" id="bell" aria-label="Notifications"><svg class="i"><use href="#i-bell"/></svg><span class="dot" id="dot"></span></button>
-                <div class="user"><span class="av" id="av">S</span><b id="uname">Student</b></div>
+                <a class="user" href="#/settings" title="Settings" aria-label="Settings"><span class="av" id="av">S</span><b id="uname">Student</b></a>
             </header>
 
             <section class="view" id="v-home">
@@ -182,6 +181,11 @@
                     </div>
                     <div class="banner-mark" aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M25 51l16 16 35-39"/><circle cx="50" cy="50" r="39"/></svg></div>
                 </div>
+                <div class="card tk-sum" id="tkSum">
+                    <div class="tk-ring"><b id="tkPct">0%</b></div>
+                    <div class="tk-info"><h3 data-t>Your progress</h3><p id="tkTxt"></p><div class="tk-bar"><i id="tkBar"></i></div></div>
+                    <div class="tk-stats"><div><b id="tkA">0</b><span data-t>Active</span></div><div><b id="tkD">0</b><span data-t>Done</span></div></div>
+                </div>
                 <div class="card">
                     <form class="form" id="addF"><input id="tin" required maxlength="200" data-ph="Add a new task…" placeholder="Add a new task…" aria-label="New task"><select id="tpr" aria-label="Difficulty"><option value="Low" data-t>Easy</option><option value="Medium" selected data-t>Medium</option><option value="High" data-t>Hard</option></select><button class="btn" type="submit"><span data-t>Add</span></button></form>
                 </div>
@@ -219,7 +223,7 @@
                     </div>
                     <div class="calc-mount" id="cxMount"></div>
                 </div>
-                <template id="cxTpl"><link rel="stylesheet" href="assets/css/calculator.css?v=11"><div class="cxs" id="cxs"><div class="fit" id="fit"><div class="calc" id="calc">
+                <template id="cxTpl"><link rel="stylesheet" href="assets/css/calculator.css?v=13"><div class="cxs" id="cxs"><div class="fit" id="fit"><div class="calc" id="calc">
  <div class="brand"><span class="b1">fx-991</span><span class="b2">SCIENTIFIC CALCULATOR</span><span class="solar"><i></i><i></i><i></i><i></i></span></div>
  <div class="lcd" id="lcd"><div class="sb" id="sb"></div><div class="ex" id="ex"></div><div class="rs" id="rs">0</div><div class="bt" id="bt" hidden></div><div class="sp" id="sp"><div class="spt" id="spt"></div><div class="sph">TAP SCREEN OR PRESS AC TO WAKE</div></div></div>
  <div id="kp"></div>
@@ -402,9 +406,9 @@
     <script src="assets/js/color-picker.js"></script>
     <script defer src="assets/js/pdf-core.js"></script>
     <script defer src="assets/js/board-host.js"></script>
-    <script defer src="assets/js/nexa.js?v=11"></script>
-    <script defer src="assets/js/calculator.js?v=11"></script>
-    <script defer src="assets/js/timer-mini.js?v=11"></script>
-    <script defer src="assets/js/section-loader.js?v=11"></script>
+    <script defer src="assets/js/nexa.js?v=13"></script>
+    <script defer src="assets/js/calculator.js?v=13"></script>
+    <script defer src="assets/js/timer-mini.js?v=13"></script>
+    <script defer src="assets/js/section-loader.js?v=13"></script>
 </body>
 </html>
