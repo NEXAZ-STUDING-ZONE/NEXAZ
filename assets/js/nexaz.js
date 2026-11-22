@@ -708,7 +708,8 @@
                     full[p] = map.get(ids[i])
                 });
                 full.forEach((t, i) => {
-                    t.o = i
+                    t.o = i;
+                    t.no = i + 1
                 });
                 S.tMan = true;
                 save();
@@ -801,6 +802,9 @@
                     delete t.o
                 });
                 S.tMan = false;
+                S.tasks.slice().sort(tSort).forEach((t, i) => {
+                    t.no = i + 1
+                });
                 SFX.tap();
                 save();
                 render()
