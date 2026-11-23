@@ -1,7 +1,7 @@
 
 (function (W) {
   'use strict';
-  var VER = '2', loading = null;
+  var VER = '1', loading = null;
   var isAr = function () { return document.documentElement.lang === 'ar'; };
   var theme = function () { return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light'; };
 

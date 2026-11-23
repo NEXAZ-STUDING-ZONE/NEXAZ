@@ -135,10 +135,10 @@
             o.setAttribute('role', 'status');
             o.setAttribute('aria-live', 'polite');
             o.setAttribute('aria-busy', 'true');
-            o.innerHTML = '<div class="nx-secload-ring"></div>';
+            o.innerHTML = '<b></b><div class="nx-secload-ring"></div><div class="nx-secload-bar"><i></i></div>';
             view.appendChild(o);
         }
-        o.setAttribute('aria-label', ar() ? 'جارٍ التحميل' : 'Loading');
+        o.querySelector('b').textContent = ar() ? 'جارٍ التحميل' : 'Loading';
         return o;
     }
 
