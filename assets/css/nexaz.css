@@ -9884,45 +9884,10 @@ body.side-collapsed #nav a.on::before {
 }
 
 .nx-secload-ring {
-    width: 64px;
-    height: 64px;
+    width: 58px;
+    height: 58px;
     border-width: 5px;
     box-shadow: 0 10px 30px color-mix(in srgb, var(--acc) 30%, transparent)
-}
-
-.nx-secload-ring::after {
-    content: "";
-    position: absolute;
-    inset: 9px;
-    border-radius: 50%;
-    border: 4px solid transparent;
-    border-bottom-color: color-mix(in srgb, var(--acc) 55%, #fff);
-    border-left-color: color-mix(in srgb, var(--acc) 30%, transparent);
-    animation: nxSecSpin 1.3s linear infinite reverse
-}
-
-.nx-secload-ring {
-    position: relative
-}
-
-.gn-boot {
-    position: absolute;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    font-size: 0;
-    color: transparent
-}
-
-.gn-boot::before {
-    content: "";
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    border: 5px solid color-mix(in srgb, var(--acc) 18%, transparent);
-    border-top-color: var(--acc);
-    border-right-color: color-mix(in srgb, var(--acc) 55%, #fff);
-    animation: nxSecSpin .85s linear infinite
 }
 
 #v-home .hero {
@@ -10361,16 +10326,310 @@ body.side-collapsed #nav a.on::before {
     .set-grid { grid-template-columns: minmax(0, 1fr) }
 }
 
-.gn-host {
-    border-radius: 26px;
-    border: 1px solid color-mix(in srgb, var(--acc) 22%, rgba(0, 0, 0, .08));
-    box-shadow: 0 20px 46px rgba(20, 70, 60, .16), 0 0 0 5px color-mix(in srgb, var(--acc) 7%, transparent)
+
+.hm-st {
+    --c1: #14b8a6;
+    --c2: #0b8f82;
+    border: 0;
+    color: #fff;
+    background: linear-gradient(135deg, var(--c1), var(--c2));
+    box-shadow: 0 14px 30px color-mix(in srgb, var(--c2) 38%, transparent)
 }
 
-.gn-host.gn-full {
-    box-shadow: none
+.hm-st.s2 { --c1: #5b9bf0; --c2: #3a5fd0 }
+.hm-st.s3 { --c1: #ffa24a; --c2: #e8633a }
+.hm-st.s4 { --c1: #9a7af5; --c2: #6a46d6 }
+
+.hm-st::after {
+    inset-inline-end: -34px;
+    top: -34px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, .34), rgba(255, 255, 255, .05) 70%)
 }
 
-#v-smartboard .section-banner {
-    margin-bottom: 4px
+.hm-st::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -20px;
+    bottom: -42px;
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, .12)
+}
+
+.hm-st:hover {
+    border-color: transparent;
+    box-shadow: 0 20px 38px color-mix(in srgb, var(--c2) 50%, transparent)
+}
+
+.hm-si {
+    background: rgba(255, 255, 255, .24);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35), 0 8px 18px rgba(0, 0, 0, .12);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px)
+}
+
+.hm-st b {
+    color: #fff;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, .14)
+}
+
+.hm-st small {
+    color: rgba(255, 255, 255, .88)
+}
+
+.section-banner {
+    --bn: #2fb7a0;
+    background: linear-gradient(112deg, color-mix(in srgb, var(--bn) 22%, #fff) 0%, color-mix(in srgb, var(--bn) 9%, #fff) 55%, color-mix(in srgb, var(--bn) 15%, #eaf6f6) 100%);
+    border-color: color-mix(in srgb, var(--bn) 28%, #fff);
+    box-shadow: 0 18px 40px color-mix(in srgb, var(--bn) 18%, transparent)
+}
+
+#v-tasks .section-banner { --bn: #22b573 }
+#v-library .section-banner { --bn: #4f8fe8 }
+#v-calculator .section-banner { --bn: #f08a3c }
+#v-notes .section-banner { --bn: #e7a92b }
+#v-timetable .section-banner { --bn: #e0607e }
+#v-focus .section-banner { --bn: #7a64e0 }
+#v-smartboard .section-banner { --bn: #1fa6c9 }
+#v-about .section-banner { --bn: #5d7fa0 }
+#v-settings .section-banner { --bn: #2fb7a0 }
+
+:root[data-theme="dark"] .section-banner {
+    background: linear-gradient(112deg, color-mix(in srgb, var(--bn) 30%, var(--card)) 0%, color-mix(in srgb, var(--bn) 10%, var(--card)) 65%, var(--card) 100%);
+    border-color: color-mix(in srgb, var(--bn) 32%, transparent);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .35)
+}
+
+.section-banner::before {
+    border-color: color-mix(in srgb, var(--bn) 28%, transparent)
+}
+
+.banner-copy .eyebrow {
+    display: flex;
+    width: max-content;
+    max-width: 100%;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 13px;
+    border-radius: 99px;
+    letter-spacing: .14em;
+    color: color-mix(in srgb, var(--bn) 78%, #0b2a2a);
+    background: color-mix(in srgb, var(--bn) 15%, #fff);
+    border: 1px solid color-mix(in srgb, var(--bn) 30%, transparent)
+}
+
+:root[data-theme="dark"] .banner-copy .eyebrow {
+    color: color-mix(in srgb, var(--bn) 55%, #fff);
+    background: color-mix(in srgb, var(--bn) 22%, transparent)
+}
+
+.banner-copy .eyebrow::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--bn);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--bn) 55%, transparent);
+    animation: bnDot 2.2s ease-out infinite
+}
+
+.banner-copy .pg {
+    display: block;
+    width: fit-content;
+    margin: 12px 0 8px !important;
+    font-weight: 800;
+    letter-spacing: 0;
+    background: linear-gradient(90deg, var(--text) 30%, color-mix(in srgb, var(--bn) 78%, var(--text)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent
+}
+
+.banner-copy .pg::after {
+    content: "";
+    display: block;
+    width: 56px;
+    height: 5px;
+    margin-top: 10px;
+    border-radius: 9px;
+    background: linear-gradient(90deg, var(--bn), color-mix(in srgb, var(--bn) 35%, #fff));
+    transform-origin: 0 50%
+}
+
+[dir="rtl"] .banner-copy .pg::after {
+    transform-origin: 100% 50%
+}
+
+.banner-copy p {
+    max-width: 64ch;
+    font-weight: 600
+}
+
+@keyframes bnDot {
+    to { box-shadow: 0 0 0 9px color-mix(in srgb, var(--bn) 0%, transparent) }
+}
+
+@keyframes bnIn {
+    from { opacity: 0; transform: translateY(14px) }
+    to { opacity: 1; transform: none }
+}
+
+@keyframes bnLine {
+    from { transform: scaleX(0) }
+    to { transform: scaleX(1) }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .view.on:not(.nx-loading) .banner-copy .eyebrow { animation: bnIn .55s cubic-bezier(.2, .8, .2, 1) backwards }
+    .view.on:not(.nx-loading) .banner-copy .pg { animation: bnIn .6s cubic-bezier(.2, .8, .2, 1) .08s backwards }
+    .view.on:not(.nx-loading) .banner-copy .pg::after { animation: bnLine .7s cubic-bezier(.2, .8, .2, 1) .35s backwards }
+    .view.on:not(.nx-loading) .banner-copy p { animation: bnIn .6s cubic-bezier(.2, .8, .2, 1) .18s backwards }
+    .view.on:not(.nx-loading) .banner-art-wrap { animation: bnIn .7s cubic-bezier(.2, .8, .2, 1) .12s backwards }
+}
+
+#v-library>.card:first-of-type {
+    position: relative;
+    overflow: hidden;
+    padding: 20px 22px;
+    border: 1px solid color-mix(in srgb, #4f8fe8 22%, var(--line));
+    background: linear-gradient(135deg, color-mix(in srgb, #4f8fe8 7%, var(--card)), var(--card) 60%)
+}
+
+#v-library>.card:first-of-type::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4f8fe8, #7ad7ff)
+}
+
+#bkF input:not([type="file"]),
+#bkF select {
+    border-radius: 16px;
+    transition: border-color .2s, box-shadow .2s
+}
+
+#bkF input:focus,
+#bkF select:focus {
+    outline: 0;
+    border-color: #4f8fe8;
+    box-shadow: 0 0 0 4px rgba(79, 143, 232, .2)
+}
+
+#bkF .btn:not(.ghost) {
+    background: linear-gradient(135deg, #4f8fe8, #3a5fd0);
+    box-shadow: 0 10px 22px rgba(58, 95, 208, .32)
+}
+
+#bkF .btn.ghost:hover {
+    background: color-mix(in srgb, #4f8fe8 14%, transparent);
+    color: #3a5fd0
+}
+
+#bkF .cover-pick {
+    padding-top: 14px;
+    margin-top: 4px;
+    border-top: 1px dashed var(--line)
+}
+
+#subj {
+    padding: 4px 2px
+}
+
+#subj .chip {
+    border-radius: 99px;
+    font-weight: 800;
+    border: 1px solid var(--line);
+    transition: transform .25s cubic-bezier(.3, 1.5, .5, 1), box-shadow .25s, background .2s, color .2s
+}
+
+#subj .chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(58, 95, 208, .16)
+}
+
+#subj .chip.on {
+    border-color: transparent;
+    color: #fff;
+    background: linear-gradient(135deg, #4f8fe8, #3a5fd0);
+    box-shadow: 0 10px 22px rgba(58, 95, 208, .34)
+}
+
+#lib {
+    gap: 22px
+}
+
+#lib .book {
+    transition: transform .3s cubic-bezier(.3, 1.4, .5, 1)
+}
+
+#lib .cover {
+    transition: transform .3s cubic-bezier(.3, 1.4, .5, 1), box-shadow .3s
+}
+
+#lib .cover:hover {
+    transform: translateY(-8px) rotate(-1deg) scale(1.02);
+    box-shadow: 0 26px 40px rgba(30, 60, 60, .34), inset 9px 0 0 rgba(0, 0, 0, .15), inset 12px 0 12px -8px rgba(255, 255, 255, .55)
+}
+
+#lib .bm {
+    padding: 8px 4px 0;
+    font-weight: 700
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    #v-library.on:not(.nx-loading) #lib .book { animation: hmUp .5s cubic-bezier(.2, .8, .2, 1) backwards }
+    #v-library.on:not(.nx-loading) #lib .book:nth-child(2) { animation-delay: .06s }
+    #v-library.on:not(.nx-loading) #lib .book:nth-child(3) { animation-delay: .12s }
+    #v-library.on:not(.nx-loading) #lib .book:nth-child(4) { animation-delay: .18s }
+    #v-library.on:not(.nx-loading) #lib .book:nth-child(n+5) { animation-delay: .24s }
+}
+
+#v-focus .fx-stage {
+    border: 1px solid color-mix(in srgb, #7a64e0 40%, transparent);
+    box-shadow: 0 26px 60px rgba(70, 50, 170, .34), 0 0 0 6px color-mix(in srgb, #7a64e0 9%, transparent)
+}
+
+#v-focus .fx-ib {
+    transition: transform .25s cubic-bezier(.3, 1.5, .5, 1), background .2s, box-shadow .2s
+}
+
+#v-focus .fx-ib:hover {
+    transform: translateY(-3px) scale(1.08);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .35)
+}
+
+#v-focus .fx-b {
+    transition: transform .25s cubic-bezier(.3, 1.5, .5, 1), box-shadow .25s, background .2s
+}
+
+#v-focus .fx-b:hover {
+    transform: translateY(-3px)
+}
+
+#v-focus .fx-b.big {
+    box-shadow: 0 12px 30px rgba(126, 240, 216, .35);
+    animation: fxGlow 3s ease-in-out infinite
+}
+
+#v-focus .fx-pre button {
+    transition: transform .25s cubic-bezier(.3, 1.5, .5, 1), background .2s, box-shadow .2s
+}
+
+#v-focus .fx-pre button:hover {
+    transform: translateY(-2px)
+}
+
+@keyframes fxGlow {
+    0%, 100% { box-shadow: 0 12px 30px rgba(126, 240, 216, .28) }
+    50% { box-shadow: 0 14px 40px rgba(154, 168, 255, .5) }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #v-focus .fx-b.big { animation: none }
 }

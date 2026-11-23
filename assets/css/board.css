@@ -303,24 +303,3 @@
 .gn-cp-btns{display:flex;gap:8px}
 .gn-cp-btns button{flex:1;height:38px;border-radius:10px;border:1px solid var(--bd);background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}
 .gn-cp-btns .pri{background:var(--ac);border-color:var(--ac);color:#fff}
-
-.gn-top{height:60px;padding:8px 14px;gap:8px;background:linear-gradient(180deg,color-mix(in srgb,var(--ui) 92%,#fff),color-mix(in srgb,var(--ui) 82%,transparent));box-shadow:0 1px 0 var(--bd),0 8px 24px rgba(0,0,0,.06)}
-.gn-ttl{font-weight:800;font-size:15px;max-width:min(18vw,180px);letter-spacing:0}
-.gn-tools{flex:1 1 auto;min-width:0;padding:4px;gap:4px;border-radius:18px;background:color-mix(in srgb,var(--bg) 70%,var(--ui));-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 26px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 26px),transparent 100%)}
-.gn-tools button{min-width:42px;height:40px;border-radius:14px}
-.gn-tools button.on{background:linear-gradient(135deg,var(--ac),color-mix(in srgb,var(--ac) 65%,#8fb0ff));color:#fff;box-shadow:0 6px 16px rgba(79,124,255,.4)}
-.gn-tools button.on svg{transform:scale(1.12)}
-.gn-sp{flex:0 0 0}
-.gn-sep{height:26px;margin:0 2px;background:linear-gradient(180deg,transparent,var(--bd),transparent)}
-.gn-top>button{border-radius:14px}
-.gn-top>button:not(:disabled):hover{background:var(--acs);color:var(--ac);transform:translateY(-1px)}
-.gn-sc{background:radial-gradient(color-mix(in srgb,var(--tx) 11%,transparent) 1.2px,transparent 1.6px) 0 0/22px 22px,var(--bg)}
-.gn-pg{border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,.1),0 16px 40px rgba(0,0,0,.16)}
-.gn-side{background:color-mix(in srgb,var(--ui) 92%,transparent);box-shadow:4px 0 18px rgba(0,0,0,.06)}
-.gn-th canvas{border-radius:6px;transition:transform .2s,box-shadow .2s}
-.gn-th:hover canvas{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.22)}
-.gn-pill{padding:4px 6px;gap:2px;border:1px solid rgba(255,255,255,.12);box-shadow:0 10px 30px rgba(0,0,0,.35)}
-.gn-pop{border:1px solid var(--bd);box-shadow:0 18px 50px rgba(0,0,0,.26)}
-@media (max-width:760px){.gn-top{padding:6px 8px;gap:4px}.gn-ttl{display:none}}
-@media (max-width:1500px){.gn-top{height:auto;flex-wrap:wrap;row-gap:6px;padding:8px 12px 10px}.gn-sp{flex:1 1 0}.gn-tools{order:10;flex:1 0 100%;justify-content:center;-webkit-mask-image:none;mask-image:none}}
-@media (max-width:640px){.gn-tools{justify-content:flex-start;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 26px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 10px,#000 calc(100% - 26px),transparent 100%)}}
