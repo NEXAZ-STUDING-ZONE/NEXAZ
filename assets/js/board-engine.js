@@ -153,7 +153,10 @@ W.GN=function(root,o){
  function size(){P.forEach((p,i)=>{els[i].style.width=p.w*st.z+'px';els[i].style.height=p.h*st.z+'px'});$('[data-a=zr]').textContent=Math.round(st.z*100)+'%'}
  const dpr=()=>Math.min(W.devicePixelRatio||1,2);
  function mount(i){const d=els[i];if(!d)return;const bs=d.querySelector('.gbs'),ik=d.querySelector('.ik'),lv=d.querySelector('.lv');let w=Math.round(P[i].w*st.z*dpr()),h=Math.round(P[i].h*st.z*dpr());if(o.maxPx&&w*h>o.maxPx){const k=Math.sqrt(o.maxPx/(w*h));w=Math.round(w*k);h=Math.round(h*k)}
-  const key=w+'x'+h;if(mounted[i]===key)return;mounted[i]=key;[bs,ik,lv].forEach(c=>{c.width=w;c.height=h});
+  const key=w+'x'+h;if(mounted[i]===key)return;mounted[i]=key;
+  let pv=null;if(bs.width&&bs.height){try{pv=document.createElement('canvas');pv.width=bs.width;pv.height=bs.height;pv.getContext('2d').drawImage(bs,0,0)}catch(e){pv=null}}
+  [bs,ik,lv].forEach(c=>{c.width=w;c.height=h});
+  if(pv){try{bs.getContext('2d').drawImage(pv,0,0,pv.width,pv.height,0,0,w,h)}catch(e){}}
   const p=o.base&&o.base(i,bs,w,P[i]);redraw(i);if(p&&p.catch)p.catch(()=>{})}
  function unmount(i){if(!mounted[i])return;delete mounted[i];els[i].querySelectorAll('canvas').forEach(c=>{c.width=1;c.height=1})}
  function redraw(i){const d=els[i];if(!d||!mounted[i])return;const c=d.querySelector('.ik'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);const s=c.width/P[i].w;for(const it of items[i])dr(x,it,s);live(i);if(thT[i]===undefined)thT[i]=setTimeout(()=>{delete thT[i];th1(i)},250)}

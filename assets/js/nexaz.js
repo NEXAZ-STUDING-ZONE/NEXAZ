@@ -185,6 +185,10 @@
                 'Cover colour': 'لون الغلاف',
                 'Auto': 'تلقائي',
                 'Custom colour': 'لون مخصص',
+                'Delete subject': 'حذف القسم',
+                'Uncategorized': 'غير مصنّف',
+                'Delete this subject?': 'حذف هذا القسم؟',
+                'Its books will move to “All”.': 'ستظهر كتبه ضمن «الكل» فقط.',
                 'Saving…': 'جارٍ الحفظ…',
                 'Choose PDF': 'اختر ملف PDF',
                 'Please choose a PDF file': 'من فضلك اختر ملف PDF أولًا',
@@ -484,14 +488,19 @@
                     }
                 }
                 const cnt = s => S.books.filter(b => s === 'All' || b.s === s).length;
-                $('#subj').innerHTML = ['All', ...S.subjects].map(s => `<button class="chip ${s===subj?'on':''}" data-s="${esc(s)}">${esc(s==='All'?tr('All subjects'):tr(s))} (${cnt(s)})</button>`).join('');
+                $('#subj').innerHTML = ['All', ...S.subjects].map(s => {
+                    const label = esc(s === 'All' ? tr('All subjects') : tr(s)) + ' (' + cnt(s) + ')';
+                    const chip = `<button class="chip ${s===subj?'on':''}" data-s="${esc(s)}">${label}</button>`;
+                    if (s === 'All') return chip;
+                    return `<span class="chip-wrap">${chip}<button type="button" class="chip-del" data-sdel="${esc(s)}" title="${tr('Delete subject')}" aria-label="${tr('Delete subject')}">×</button></span>`
+                }).join('');
                 S.books.forEach((x, i) => {
                     if (x.c == null) x.c = i ? (S.books[i - 1].c + 1) % PAL.length : 0
                 });
                 const bk = S.books.filter(b => (subj === 'All' || b.s === subj) && (!qv || b.t.toLowerCase().includes(qv)));
                 $('#lib').innerHTML = bk.map(b => {
                     const c = coverGrad(b);
-                    return `<div class="book"><button class="cover" data-open="${b.id}" style="--c1:${c[0]};--c2:${c[1]}" aria-label="${esc(b.t)}"><span class="bt">${esc(b.t)}</span><span class="bs">${esc(tr(b.s))}</span></button><div class="bm"><span>${b.ty?esc(b.ty)+' · '+fmt(b.size):'—'}</span><button class="rc-btn" data-recolor="${b.id}" title="${tr('Cover colour')}" aria-label="${tr('Cover colour')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.8-.4-1.1-.3-.4-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4c0-4.4-4-8.5-9-8.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></button>${b.fn?`<button class="open-btn" data-open="${b.id}">${tr('Open')}</button>`:''}<button class="x" data-bdel="${b.id}" aria-label="${tr('Delete')}">${ic('x')}</button></div></div>`
+                    return `<div class="book"><button class="cover" data-open="${b.id}" style="--c1:${c[0]};--c2:${c[1]}" aria-label="${esc(b.t)}"><span class="bt">${esc(b.t)}</span><span class="bs">${esc(tr(b.s||'Uncategorized'))}</span></button><div class="bm"><span>${b.ty?esc(b.ty)+' · '+fmt(b.size):'—'}</span><button class="rc-btn" data-recolor="${b.id}" title="${tr('Cover colour')}" aria-label="${tr('Cover colour')}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.8-.4-1.1-.3-.4-.4-.7-.4-1.1 0-.9.7-1.6 1.6-1.6H17a4 4 0 0 0 4-4c0-4.4-4-8.5-9-8.5z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7" r="1"/><circle cx="15" cy="7.5" r="1"/></svg></button>${b.fn?`<button class="open-btn" data-open="${b.id}">${tr('Open')}</button>`:''}<button class="x" data-bdel="${b.id}" aria-label="${tr('Delete')}">${ic('x')}</button></div></div>`
                 }).join('') || `<p class="empty">${tr('Your library is empty. Add your first book above.')}</p>`;
                 {
                     const bs = $('#bs'),
@@ -622,6 +631,27 @@
                     subj = s.dataset.s;
                     SFX.tap();
                     render();
+                    return
+                }
+                const sd = e.target.closest('[data-sdel]');
+                if (sd) {
+                    const name = sd.dataset.sdel;
+                    confirmDlg({
+                        title: tr('Delete this subject?'),
+                        msg: tr('Its books will move to “All”.'),
+                        ok: tr('Delete'),
+                        danger: true
+                    }).then(ok => {
+                        if (!ok) return;
+                        S.subjects = S.subjects.filter(x => x !== name);
+                        S.books.forEach(b => {
+                            if (b.s === name) b.s = ''
+                        });
+                        if (subj === name) subj = 'All';
+                        SFX.tap();
+                        save();
+                        render()
+                    });
                     return
                 }
                 const bd = e.target.closest('[data-bdel]');
@@ -1244,11 +1274,9 @@
                 const f = e.target.files[0];
                 if (f && !(await isPdf(f))) {
                     e.target.value = '';
-                    $('#fn').textContent = '';
                     toast(tr('Only valid PDF files are supported'));
                     return
                 }
-                $('#fn').textContent = f ? f.name : '';
                 if (f && !$('#bt').value) $('#bt').value = f.name.replace(/\.[^.]+$/, '')
             };
             const hx = h => [1, 3, 5].map(i => parseInt(String(h).slice(i, i + 2), 16) || 0);
@@ -1344,12 +1372,6 @@
             }
             window.NX_confirm = confirmDlg;
             window.__coverPick = null;
-            const cpBox = $('#cpSw');
-            const repaintPick = () => paintPick(cpBox, window.__coverPick, (c, live) => {
-                window.__coverPick = c;
-                if (!live) repaintPick()
-            });
-            repaintPick();
             const recolorPop = document.createElement('div');
             recolorPop.className = 'recolor-pop';
             recolorPop.hidden = true;
@@ -1384,8 +1406,26 @@
                 recolorPop.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
                 recolorPop.style.top = (r.bottom + h + 12 > innerHeight ? Math.max(8, r.top - h - 8) : r.bottom + 8) + 'px'
             });
+            $('#cpPick').onclick = e => {
+                e.stopPropagation();
+                if (recolorId === 'new' && !recolorPop.hidden) {
+                    closePop();
+                    return
+                }
+                recolorId = 'new';
+                paintPick(recolorPop, window.__coverPick, (c, live) => {
+                    window.__coverPick = c;
+                    if (!live) closePop()
+                });
+                recolorPop.hidden = false;
+                const r = e.currentTarget.getBoundingClientRect(),
+                    w = recolorPop.offsetWidth,
+                    h = recolorPop.offsetHeight;
+                recolorPop.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
+                recolorPop.style.top = (r.bottom + h + 12 > innerHeight ? Math.max(8, r.top - h - 8) : r.bottom + 8) + 'px'
+            };
             document.addEventListener('click', e => {
-                if (!recolorPop.hidden && !recolorPop.contains(e.target) && !e.target.closest('[data-recolor]')) closePop()
+                if (!recolorPop.hidden && !recolorPop.contains(e.target) && !e.target.closest('[data-recolor]') && !e.target.closest('#cpPick')) closePop()
             });
             document.addEventListener('keydown', e => {
                 if (e.key === 'Escape') closePop()
@@ -1451,7 +1491,6 @@
                 S.books.push(b);
                 $('#bt').value = '';
                 $('#bf').value = '';
-                $('#fn').textContent = '';
                 $('#bsn').value = '';
                 $('#bsn').hidden = true;
                 SFX.add();
@@ -1461,7 +1500,7 @@
                 render();
                 $('#bs').value = s;
                 window.__coverPick = null;
-                repaintPick();
+                closePop();
                 setTimeout(() => {
                     const o = document.querySelector('[data-open="' + b.id + '"]');
                     if (o) {
@@ -5400,7 +5439,7 @@
                 if (!B || !K) return;
                 B.innerHTML = S.books.slice(-4).reverse().map(b => {
                     const c = coverGrad(b);
-                    return `<div class="hm-b"><button class="cover" data-hopen="${b.id}" style="--c1:${c[0]};--c2:${c[1]}" aria-label="${esc(b.t)}"><span class="bt">${esc(b.t)}</span><span class="bs">${esc(tr(b.s))}</span></button><b class="hm-bn" title="${esc(b.t)}">${esc(b.t)}</b><span class="hm-chip">${esc(b.ty||'PDF')}</span></div>`
+                    return `<div class="hm-b"><button class="cover" data-hopen="${b.id}" style="--c1:${c[0]};--c2:${c[1]}" aria-label="${esc(b.t)}"><span class="bt">${esc(b.t)}</span><span class="bs">${esc(tr(b.s||'Uncategorized'))}</span></button><b class="hm-bn" title="${esc(b.t)}">${esc(b.t)}</b><span class="hm-chip">${esc(b.ty||'PDF')}</span></div>`
                 }).join('') || `<p class="hm-empty">${tr('Your library is empty. Add your first book above.')}</p>`;
                 const ts = S.tasks.slice().sort((a, b) => (!!a.d - !!b.d) || tSort(a, b)).slice(0, 4);
                 K.innerHTML = ts.map(x => `<div class="hm-t ${x.d?'done':''}"><button class="hm-chk" data-hid="${x.id}" role="checkbox" aria-checked="${!!x.d}" aria-label="${esc(tr(x.t))}">${ic('ck')}</button><span class="hm-tt"><b>${esc(tr(x.t))}</b><small>${tr(DIFF[x.p]||x.p)}</small></span>${x.d?`<span class="hm-ok">${tr('Completed')}</span>`:`<span class="hm-when"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>${tr('Today')}</span>`}</div>`).join('') || `<p class="hm-empty">${tr('No tasks yet. Add your first task above.')}</p>`;
@@ -5529,688 +5568,6 @@
                     i.focus()
                 })
             }
-            const NXPDF = (() => {
-                const WS = new Uint8Array(256),
-                    DL = new Uint8Array(256);
-                for (const c of ' \t\r\n\f\0') WS[c.charCodeAt(0)] = 1;
-                for (const c of '()<>[]{}/%') DL[c.charCodeAt(0)] = 1;
-                class Eof extends Error {}
-                class Ref {
-                    constructor(n, g) {
-                        this.n = n;
-                        this.g = g
-                    }
-                }
-                class Name {
-                    constructor(v) {
-                        this.v = v
-                    }
-                }
-                class Raw {
-                    constructor(u) {
-                        this.u = u
-                    }
-                }
-                class Kw {
-                    constructor(v) {
-                        this.v = v
-                    }
-                }
-                const dec = u => {
-                    let s = '';
-                    for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]);
-                    return s
-                };
-                const isInt = v => typeof v === 'number' && Number.isInteger(v);
-
-                function P(b, p, final) {
-                    this.b = b;
-                    this.p = p || 0;
-                    this.final = !!final
-                }
-                P.prototype.skip = function() {
-                    const b = this.b;
-                    while (this.p < b.length) {
-                        const c = b[this.p];
-                        if (WS[c]) this.p++;
-                        else if (c === 37) {
-                            while (this.p < b.length && b[this.p] !== 10 && b[this.p] !== 13) this.p++
-                        } else return
-                    }
-                };
-                P.prototype.need = function() {
-                    if (this.p >= this.b.length) throw new Eof()
-                };
-                P.prototype.name = function() {
-                    const b = this.b;
-                    let s = '';
-                    while (this.p < b.length && !WS[b[this.p]] && !DL[b[this.p]]) {
-                        let c = b[this.p++];
-                        if (c === 35 && this.p + 1 < b.length) {
-                            const h = parseInt(String.fromCharCode(b[this.p], b[this.p + 1]), 16);
-                            if (!isNaN(h)) {
-                                c = h;
-                                this.p += 2
-                            }
-                        }
-                        s += String.fromCharCode(c)
-                    }
-                    if (this.p >= b.length && !this.final) throw new Eof();
-                    return s
-                };
-                P.prototype.obj = function() {
-                    this.skip();
-                    this.need();
-                    const b = this.b,
-                        c = b[this.p];
-                    if (c === 47) {
-                        this.p++;
-                        return new Name(this.name())
-                    }
-                    if (c === 60) {
-                        if (b[this.p + 1] === 60) {
-                            this.p += 2;
-                            const d = Object.create(null);
-                            for (;;) {
-                                this.skip();
-                                this.need();
-                                if (b[this.p] === 62) {
-                                    if (this.p + 1 >= b.length) throw new Eof();
-                                    if (b[this.p + 1] === 62) {
-                                        this.p += 2;
-                                        return d
-                                    }
-                                }
-                                const k = this.obj();
-                                if (!(k instanceof Name)) throw new Error('bad dict');
-                                d[k.v] = this.obj()
-                            }
-                        }
-                        const s = this.p;
-                        while (this.p < b.length && b[this.p] !== 62) this.p++;
-                        if (this.p >= b.length) throw new Eof();
-                        this.p++;
-                        return new Raw(b.slice(s, this.p))
-                    }
-                    if (c === 91) {
-                        this.p++;
-                        const a = [];
-                        for (;;) {
-                            this.skip();
-                            this.need();
-                            if (b[this.p] === 93) {
-                                this.p++;
-                                return a
-                            }
-                            a.push(this.obj())
-                        }
-                    }
-                    if (c === 40) {
-                        const s = this.p;
-                        let depth = 0;
-                        for (;;) {
-                            if (this.p >= b.length) throw new Eof();
-                            const x = b[this.p++];
-                            if (x === 92) this.p++;
-                            else if (x === 40) depth++;
-                            else if (x === 41 && --depth === 0) break
-                        }
-                        return new Raw(b.slice(s, this.p))
-                    }
-                    if (c === 41 || c === 62 || c === 93 || c === 123 || c === 125) throw new Error('unexpected delimiter');
-                    const s = this.p;
-                    while (this.p < b.length && !WS[b[this.p]] && !DL[b[this.p]]) this.p++;
-                    if (this.p >= b.length && !this.final) throw new Eof();
-                    const t = dec(b.subarray(s, this.p));
-                    if (/^[+-]?\d+$/.test(t)) {
-                        const n = parseInt(t, 10);
-                        if (n >= 0 && !/^[+-]/.test(t)) {
-                            const save = this.p;
-                            this.skip();
-                            const s2 = this.p;
-                            while (this.p < b.length && b[this.p] >= 48 && b[this.p] <= 57) this.p++;
-                            if (this.p > s2 && this.p < b.length) {
-                                const g = parseInt(dec(b.subarray(s2, this.p)), 10);
-                                this.skip();
-                                if (b[this.p] === 82 && (this.p + 1 >= b.length || WS[b[this.p + 1]] || DL[b[this.p + 1]])) {
-                                    this.p++;
-                                    return new Ref(n, g)
-                                }
-                            } else if (this.p >= b.length && !this.final && this.p > s2) throw new Eof();
-                            this.p = save
-                        }
-                        return n
-                    }
-                    if (/^[+-]?(\d+\.\d*|\.\d+)$/.test(t)) return parseFloat(t);
-                    if (t === 'true') return true;
-                    if (t === 'false') return false;
-                    if (t === 'null') return null;
-                    return new Kw(t)
-                };
-                const num = (v, d) => typeof v === 'number' ? v : d;
-                async function inflate(u8) {
-                    const s = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate'));
-                    return new Uint8Array(await new Response(s).arrayBuffer())
-                }
-
-                function unpredict(u8, parms) {
-                    const pr = num(parms && parms.Predictor, 1);
-                    if (pr < 10) return u8;
-                    const cols = num(parms.Columns, 1),
-                        colors = num(parms.Colors, 1),
-                        bpc = num(parms.BitsPerComponent, 8),
-                        bpp = Math.max(1, colors * bpc >> 3),
-                        rb = Math.ceil(cols * colors * bpc / 8),
-                        rows = Math.floor(u8.length / (rb + 1)),
-                        out = new Uint8Array(rows * rb);
-                    for (let r = 0; r < rows; r++) {
-                        const f = u8[r * (rb + 1)],
-                            so = r * (rb + 1) + 1,
-                            d = r * rb,
-                            pd = d - rb;
-                        for (let i = 0; i < rb; i++) {
-                            const x = u8[so + i],
-                                a = i >= bpp ? out[d + i - bpp] : 0,
-                                b = r ? out[pd + i] : 0,
-                                c = (r && i >= bpp) ? out[pd + i - bpp] : 0;
-                            let v;
-                            switch (f) {
-                                case 0:
-                                    v = x;
-                                    break;
-                                case 1:
-                                    v = x + a;
-                                    break;
-                                case 2:
-                                    v = x + b;
-                                    break;
-                                case 3:
-                                    v = x + ((a + b) >> 1);
-                                    break;
-                                case 4: {
-                                    const p = a + b - c,
-                                        pa = Math.abs(p - a),
-                                        pb = Math.abs(p - b),
-                                        pc = Math.abs(p - c);
-                                    v = x + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c);
-                                    break
-                                }
-                                default:
-                                    v = x
-                            }
-                            out[d + i] = v & 255
-                        }
-                    }
-                    return out
-                }
-                class Lite {
-                    constructor(f) {
-                        this.f = f;
-                        this.xref = new Map();
-                        this.cache = new Map();
-                        this.os = new Map();
-                        this.trailer = null
-                    }
-                    async read(a, b) {
-                        return new Uint8Array(await this.f.slice(Math.max(0, a), Math.min(this.f.size, b)).arrayBuffer())
-                    }
-                    async parseAt(off) {
-                        let size = 8192;
-                        for (;;) {
-                            const end = Math.min(this.f.size, off + size),
-                                b = await this.read(off, end),
-                                final = end >= this.f.size;
-                            try {
-                                const p = new P(b, 0, final),
-                                    n = p.obj(),
-                                    g = p.obj(),
-                                    kw = p.obj();
-                                if (!isInt(n) || !(kw instanceof Kw) || kw.v !== 'obj') throw new Error('bad object header');
-                                const val = p.obj();
-                                p.skip();
-                                let stream = null;
-                                if (b[p.p] === 115 && dec(b.subarray(p.p, p.p + 6)) === 'stream') {
-                                    let q = p.p + 6;
-                                    if (b[q] === 13 && b[q + 1] === 10) q += 2;
-                                    else if (b[q] === 10 || b[q] === 13) q++;
-                                    stream = {
-                                        start: off + q
-                                    }
-                                }
-                                return {
-                                    n,
-                                    g,
-                                    val,
-                                    stream
-                                }
-                            } catch (e) {
-                                if (e instanceof Eof && !final) {
-                                    size *= 4;
-                                    continue
-                                }
-                                throw e
-                            }
-                        }
-                    }
-                    async resolve(v) {
-                        let i = 0;
-                        while (v instanceof Ref && i++ < 20) v = (await this.get(v.n)).val;
-                        return v
-                    }
-                    async get(n) {
-                        if (this.cache.has(n)) return this.cache.get(n);
-                        const e = this.xref.get(n);
-                        if (!e) return {
-                            val: null
-                        };
-                        let o;
-                        if (e.t === 1) {
-                            o = await this.parseAt(e.off);
-                            if (o.n !== n) throw new Error('xref points to the wrong object')
-                        } else {
-                            o = await this.fromObjStm(e.stm, n)
-                        }
-                        if (this.cache.size > 4000) this.cache.clear();
-                        this.cache.set(n, o);
-                        return o
-                    }
-                    async streamLen(o) {
-                        let len = await this.resolve(o.val.Length);
-                        const s = o.stream.start;
-                        if (isInt(len)) {
-                            const t = await this.read(s + len, s + len + 16);
-                            if (/^\s*endstream/.test(dec(t))) return len
-                        }
-                        let pos = s;
-                        for (;;) {
-                            const ch = await this.read(pos, pos + (4 << 20));
-                            if (!ch.length) throw new Error('stream without end');
-                            const i = dec(ch).indexOf('endstream');
-                            if (i >= 0) {
-                                let e = pos + i;
-                                const bb = await this.read(e - 2, e);
-                                if (bb[1] === 10) e--;
-                                if (bb[1] === 10 && bb[0] === 13) e--;
-                                else if (bb[1] === 13) e--;
-                                return e - s
-                            }
-                            pos += ch.length - 9;
-                            if (pos >= this.f.size) throw new Error('stream without end')
-                        }
-                    }
-                    async decodeStream(o) {
-                        const raw = await this.read(o.stream.start, o.stream.start + await this.streamLen(o));
-                        let fl = await this.resolve(o.val.Filter),
-                            pm = await this.resolve(o.val.DecodeParms);
-                        fl = fl == null ? [] : Array.isArray(fl) ? fl : [fl];
-                        if (Array.isArray(pm)) pm = pm[0];
-                        let data = raw;
-                        for (const x of fl) {
-                            const nm = (await this.resolve(x)).v;
-                            if (nm === 'FlateDecode' || nm === 'Fl') {
-                                data = await inflate(data);
-                                const p = pm && await this.resolve(pm);
-                                if (p) {
-                                    const pp = Object.create(null);
-                                    for (const k in p) pp[k] = await this.resolve(p[k]);
-                                    data = unpredict(data, pp)
-                                }
-                            } else throw new Error('unsupported stream filter ' + nm)
-                        }
-                        return data
-                    }
-                    async fromObjStm(sn, n) {
-                        let c = this.os.get(sn);
-                        if (!c) {
-                            const o = await this.get(sn);
-                            if (!o.stream) throw new Error('bad object stream');
-                            const data = await this.decodeStream(o),
-                                N = await this.resolve(o.val.N),
-                                First = await this.resolve(o.val.First),
-                                p = new P(data, 0, true),
-                                idx = [];
-                            for (let i = 0; i < N; i++) idx.push([p.obj(), p.obj()]);
-                            c = {
-                                data,
-                                First,
-                                idx
-                            };
-                            if (this.os.size > 6) this.os.clear();
-                            this.os.set(sn, c)
-                        }
-                        const i = c.idx.findIndex(x => x[0] === n);
-                        if (i < 0) return {
-                            val: null
-                        };
-                        return {
-                            n,
-                            val: new P(c.data, c.First + c.idx[i][1], true).obj()
-                        }
-                    }
-                    async load() {
-                        if (this.f.size < 32) throw new Error('file too small');
-                        const tail = await this.read(this.f.size - 4096, this.f.size),
-                            m = [...dec(tail).matchAll(/startxref\s+(\d+)/g)].pop();
-                        if (!m) throw new Error('startxref not found');
-                        const seen = new Set(),
-                            todo = [+m[1]];
-                        while (todo.length) {
-                            const off = todo.shift();
-                            if (seen.has(off) || off < 0 || off >= this.f.size) continue;
-                            seen.add(off);
-                            const t = await this.xrefSection(off);
-                            if (!this.trailer) this.trailer = t;
-                            if (isInt(t.XRefStm)) todo.unshift(t.XRefStm);
-                            if (isInt(t.Prev)) todo.push(t.Prev)
-                        }
-                        if (!this.trailer || !this.trailer.Root) throw new Error('no document root');
-                        if (this.trailer.Encrypt) throw new Error('encrypted');
-                        const root = await this.resolve(this.trailer.Root),
-                            pages = await this.resolve(root.Pages);
-                        this.pages = root.Pages;
-                        this.numPages = num(await this.resolve(pages.Count), 0);
-                        if (!this.numPages) throw new Error('no pages')
-                    }
-                    async xrefSection(off) {
-                        let head = dec(await this.read(off, off + 32));
-                        if (/^\s*xref/.test(head)) return this.xrefTable(off);
-                        const o = await this.parseAt(off);
-                        if (!o.stream || !o.val) throw new Error('bad xref');
-                        const d = o.val,
-                            data = await this.decodeStream(o),
-                            W = (await this.resolve(d.W)).map(x => x | 0),
-                            size = num(await this.resolve(d.Size), 0);
-                        let idx = await this.resolve(d.Index);
-                        idx = idx && idx.length ? idx : [0, size];
-                        const rl = W[0] + W[1] + W[2];
-                        let p = 0;
-                        const rd = w => {
-                            let v = 0;
-                            for (let i = 0; i < w; i++) v = v * 256 + data[p++];
-                            return v
-                        };
-                        for (let k = 0; k < idx.length; k += 2) {
-                            for (let i = 0; i < idx[k + 1] && p + rl <= data.length; i++) {
-                                const num_ = idx[k] + i,
-                                    t = W[0] ? rd(W[0]) : 1,
-                                    a = rd(W[1]),
-                                    b = rd(W[2]);
-                                if (!this.xref.has(num_)) {
-                                    if (t === 1) this.xref.set(num_, {
-                                        t: 1,
-                                        off: a
-                                    });
-                                    else if (t === 2) this.xref.set(num_, {
-                                        t: 2,
-                                        stm: a,
-                                        idx: b
-                                    });
-                                    else this.xref.set(num_, null)
-                                }
-                            }
-                        }
-                        const out = Object.create(null);
-                        for (const k of ['Root', 'Encrypt', 'Prev', 'Size', 'Info'])
-                            if (d[k] != null) out[k] = d[k];
-                        return out
-                    }
-                    async xrefTable(off) {
-                        let size = 1 << 20;
-                        for (;;) {
-                            const end = Math.min(this.f.size, off + size),
-                                b = await this.read(off, end),
-                                final = end >= this.f.size;
-                            try {
-                                const p = new P(b, 0, final);
-                                p.skip();
-                                if (dec(b.subarray(p.p, p.p + 4)) !== 'xref') throw new Error('bad xref');
-                                p.p += 4;
-                                const pend = [];
-                                for (;;) {
-                                    p.skip();
-                                    p.need();
-                                    if (b[p.p] === 116) {
-                                        const kw = p.obj();
-                                        if (!(kw instanceof Kw) || kw.v !== 'trailer') throw new Error('bad xref');
-                                        break
-                                    }
-                                    const start = p.obj(),
-                                        count = p.obj();
-                                    if (!isInt(start) || !isInt(count)) throw new Error('bad xref subsection');
-                                    for (let i = 0; i < count; i++) {
-                                        const a = p.obj(),
-                                            g = p.obj(),
-                                            k = p.obj();
-                                        if (!(k instanceof Kw)) throw new Error('bad xref entry');
-                                        pend.push([start + i, k.v === 'n' ? a : -1])
-                                    }
-                                }
-                                const t = p.obj();
-                                for (const [n, a] of pend)
-                                    if (!this.xref.has(n)) this.xref.set(n, a >= 0 ? {
-                                        t: 1,
-                                        off: a
-                                    } : null);
-                                const out = Object.create(null);
-                                for (const k in t) out[k] = t[k];
-                                for (const k of ['Prev', 'XRefStm', 'Size']) {
-                                    const v = await this.resolve(out[k]);
-                                    if (v != null) out[k] = v
-                                }
-                                return out
-                            } catch (e) {
-                                if (e instanceof Eof && !final) {
-                                    size *= 4;
-                                    continue
-                                }
-                                throw e
-                            }
-                        }
-                    }
-                    async pageNode(n) {
-                        let node = this.pages,
-                            idx = n - 1;
-                        const inh = Object.create(null);
-                        for (let guard = 0; guard < 64; guard++) {
-                            const d = await this.resolve(node);
-                            for (const k of ['Resources', 'MediaBox', 'CropBox', 'Rotate'])
-                                if (d[k] != null) inh[k] = d[k];
-                            const kids = await this.resolve(d.Kids);
-                            if (!Array.isArray(kids)) return {
-                                dict: d,
-                                inh
-                            };
-                            let next = null;
-                            for (const k of kids) {
-                                const kd = await this.resolve(k);
-                                if (kd && (kd.Kids != null || (kd.Type && kd.Type.v === 'Pages'))) {
-                                    const c = num(await this.resolve(kd.Count), 0);
-                                    if (idx < c) {
-                                        next = k;
-                                        break
-                                    }
-                                    idx -= c
-                                } else {
-                                    if (idx === 0) return {
-                                        dict: kd,
-                                        inh: {
-                                            ...inh
-                                        }
-                                    };
-                                    idx--
-                                }
-                            }
-                            if (!next) throw new Error('page ' + n + ' not found');
-                            node = next
-                        }
-                        throw new Error('page tree too deep')
-                    }
-                    async pageBlob(n) {
-                        const pn = await this.pageNode(n),
-                            page = Object.create(null);
-                        for (const k in pn.dict) page[k] = pn.dict[k];
-                        for (const k in pn.inh)
-                            if (page[k] == null) page[k] = pn.inh[k];
-                        for (const k of ['Parent', 'Annots', 'Thumb', 'StructParents', 'B', 'AA', 'Metadata', 'PieceInfo', 'Tabs']) delete page[k];
-                        page.Type = new Name('Page');
-                        const map = new Map(),
-                            queue = [];
-                        let next = 4;
-                        const enc = s => s.replace(/[^!-~]|[#()<>\[\]{}\/%]/g, c => '#' + c.charCodeAt(0).toString(16).padStart(2, '0'));
-                        const ser = (v, out) => {
-                            if (v instanceof Ref) {
-                                let m = map.get(v.n);
-                                if (!m) {
-                                    m = next++;
-                                    map.set(v.n, m);
-                                    queue.push(v.n)
-                                }
-                                out.push(m + ' 0 R')
-                            } else if (v instanceof Name) out.push('/' + enc(v.v));
-                            else if (v instanceof Raw) out.push(v.u);
-                            else if (Array.isArray(v)) {
-                                out.push('[');
-                                v.forEach((x, i) => {
-                                    if (i) out.push(' ');
-                                    ser(x, out)
-                                });
-                                out.push(']')
-                            } else if (typeof v === 'number') out.push(Number.isInteger(v) ? String(v) : v.toFixed(6).replace(/0+$/, '').replace(/\.$/, ''));
-                            else if (typeof v === 'boolean') out.push(String(v));
-                            else if (v === null || v === undefined) out.push('null');
-                            else if (v instanceof Kw) out.push(v.v);
-                            else if (typeof v === 'object') {
-                                out.push('<<');
-                                for (const k in v) {
-                                    if (k === 'Parent' || v[k] === undefined) continue;
-                                    out.push('/' + enc(k) + ' ');
-                                    ser(v[k], out);
-                                    out.push(' ')
-                                }
-                                out.push('>>')
-                            }
-                        };
-                        const parts = [],
-                            offs = [];
-                        let pos = 0;
-                        const add = a => {
-                            for (const c of a) {
-                                pos += typeof c === 'string' ? c.length : c.size !== undefined ? c.size : c.length;
-                                parts.push(c)
-                            }
-                        };
-                        add(['%PDF-1.7\n', new Uint8Array([37, 226, 227, 207, 211, 10])]);
-                        const objOut = (num_, body) => {
-                            offs[num_] = pos;
-                            add([num_ + ' 0 obj\n']);
-                            add(body);
-                            add(['\nendobj\n'])
-                        };
-                        objOut(1, ['<</Type/Catalog/Pages 2 0 R>>']);
-                        objOut(2, ['<</Type/Pages/Kids[3 0 R]/Count 1>>']);
-                        const pb = [];
-                        ser(page, pb);
-                        pb[pb.length - 1] = '/Parent 2 0 R>>';
-                        objOut(3, pb);
-                        let count = 0;
-                        while (queue.length) {
-                            if (++count > 60000) throw new Error('page references too many objects');
-                            const on = queue.shift(),
-                                o = await this.get(on),
-                                out = [],
-                                id = map.get(on);
-                            if (o.stream) {
-                                const len = await this.streamLen(o),
-                                    d = Object.create(null);
-                                for (const k in o.val) d[k] = o.val[k];
-                                d.Length = len;
-                                ser(d, out);
-                                out.push('\nstream\n');
-                                out.push(this.f.slice(o.stream.start, o.stream.start + len));
-                                out.push('\nendstream')
-                            } else ser(o.val === undefined ? null : o.val, out);
-                            objOut(id, out)
-                        }
-                        const total = next,
-                            xs = pos;
-                        let x = 'xref\n0 ' + total + '\n0000000000 65535 f \n';
-                        for (let i = 1; i < total; i++) x += String(offs[i] || 0).padStart(10, '0') + ' 00000 n \n';
-                        add([x + 'trailer\n<</Size ' + total + '/Root 1 0 R>>\nstartxref\n' + xs + '\n%%EOF\n']);
-                        return new Blob(parts, {
-                            type: 'application/pdf'
-                        })
-                    }
-                }
-                class BigDoc {
-                    constructor(lite, lib, worker) {
-                        this.lite = lite;
-                        this.lib = lib;
-                        this.worker = worker;
-                        this.numPages = lite.numPages;
-                        this.live = new Map();
-                        this.dead = false
-                    }
-                    getPage(n) {
-                        if (this.dead) return Promise.reject(new Error('document closed'));
-                        let e = this.live.get(n);
-                        if (e) return e.promise;
-                        e = {
-                            n,
-                            doc: null,
-                            page: null
-                        };
-                        e.promise = (async () => {
-                            const blob = await this.lite.pageBlob(n),
-                                data = new Uint8Array(await blob.arrayBuffer());
-                            const task = this.lib.getDocument({
-                                data,
-                                isEvalSupported: false,
-                                worker: this.worker
-                            });
-                            e.doc = await task.promise;
-                            e.page = await e.doc.getPage(1);
-                            if (this.dead || this.live.get(n) !== e) {
-                                try {
-                                    e.doc.destroy()
-                                } catch (x) {}
-                                throw new Error('page released')
-                            }
-                            return e.page
-                        })();
-                        e.promise.catch(() => {
-                            if (this.live.get(n) === e) this.live.delete(n)
-                        });
-                        this.live.set(n, e);
-                        return e.promise
-                    }
-                    release(page) {
-                        for (const [n, e] of this.live)
-                            if (e.page === page) {
-                                this.live.delete(n);
-                                try {
-                                    e.doc.destroy()
-                                } catch (x) {}
-                            }
-                    }
-                    destroy() {
-                        this.dead = true;
-                        for (const e of this.live.values()) {
-                            try {
-                                e.doc && e.doc.destroy()
-                            } catch (x) {}
-                        }
-                        this.live.clear()
-                    }
-                }
-                return {
-                    async open(f, lib, worker) {
-                        const l = new Lite(f);
-                        await l.load();
-                        return new BigDoc(l, lib, worker)
-                    },
-                    Lite
-                };
-            })();
             let workerState = null;
             const NX_PDF_WORKER = 'assets/js/pdf-worker.js';
 
@@ -6308,7 +5665,7 @@
                 prog(0, L('Starting PDF engine…', 'جارٍ تشغيل محرك PDF…'));
                 const worker = await getWorker();
                 prog(.08);
-                const modes = f.size <= 8e6 ? ['full'] : f.size > 4e8 ? ['paged', 'range', 'full'] : ['range', 'paged', 'full'];
+                const modes = f.size <= 8e6 ? ['full'] : ['range', 'full'];
                 const errs = [];
                 for (const mode of modes) {
                     if (mode === 'full' && f.size > 8e6 && (f.size > 1.9e9 || !canAlloc(f.size))) {
@@ -6319,13 +5676,6 @@
                         doc = null,
                         timer = 0;
                     try {
-                        if (mode === 'paged') {
-                            prog(.15, L('Indexing pages…', 'جارٍ فهرسة الصفحات…'));
-                            doc = await Promise.race([NXPDF.open(f, lib, worker), new Promise((_, no) => setTimeout(() => no(new Error('Page index timed out')), 240000))]);
-                            prog(.9);
-                            await doc.getPage(1);
-                            return doc
-                        }
                         if (mode === 'full') {
                             prog(.1, L('Reading file…', 'جارٍ قراءة الملف…'));
                             const data = await readAll(f, fr => prog(.1 + .5 * fr));
