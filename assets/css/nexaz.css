@@ -4256,6 +4256,12 @@
         .rc-btn+.open-btn {
             margin-inline-start: 0
         }
+
+        .cp-btn {
+            margin-inline-start: 0;
+            margin-inline-end: 0;
+            align-self: center
+        }
         .developer-credit {
             padding-inline: 4px !important
         }
@@ -10558,6 +10564,33 @@ body.side-collapsed #nav a.on::before {
     color: #fff;
     background: linear-gradient(135deg, #4f8fe8, #3a5fd0);
     box-shadow: 0 10px 22px rgba(58, 95, 208, .34)
+}
+
+.chip-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px
+}
+
+.chip-del {
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--act);
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    cursor: pointer;
+    flex: none
+}
+
+.chip-del:hover {
+    background: #ef4444;
+    color: #fff
 }
 
 #lib {
