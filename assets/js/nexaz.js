@@ -1419,22 +1419,16 @@
             });
             $('#cpPick').onclick = e => {
                 e.stopPropagation();
-                if (recolorId === 'new' && !recolorPop.hidden) {
-                    closePop();
-                    return
-                }
-                recolorId = 'new';
-                paintPick(recolorPop, window.__coverPick, (c, live) => {
-                    window.__coverPick = c;
-                    if (!live) closePop()
-                });
-                recolorPop.hidden = false;
-                const r = e.currentTarget.getBoundingClientRect(),
-                    w = recolorPop.offsetWidth,
-                    h = recolorPop.offsetHeight;
-                recolorPop.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
-                recolorPop.style.top = (r.bottom + h + 12 > innerHeight ? Math.max(8, r.top - h - 8) : r.bottom + 8) + 'px'
+                closePop();
+                if (window.NexaColor) NexaColor.open($('#cpIn'))
             };
+            $('#cpIn').addEventListener('input', e => {
+                const c = e.target.value;
+                window.__coverPick = c;
+                const b = $('#cpPick');
+                b.style.background = c;
+                b.classList.add('has')
+            });
             document.addEventListener('click', e => {
                 if (!recolorPop.hidden && !recolorPop.contains(e.target) && !e.target.closest('[data-recolor]') && !e.target.closest('#cpPick')) closePop()
             });
@@ -1511,6 +1505,8 @@
                 render();
                 $('#bs').value = s;
                 window.__coverPick = null;
+                $('#cpPick').style.background = '';
+                $('#cpPick').classList.remove('has');
                 closePop();
                 setTimeout(() => {
                     const o = document.querySelector('[data-open="' + b.id + '"]');
@@ -5579,8 +5575,8 @@
                     i.focus()
                 })
             }
-            let workerState = null;
             const NX_PDF_WORKER = 'assets/js/pdf-worker.js';
+            let workerP = null;
 
             function loadFakeWorker() {
                 return new Promise(res => {
@@ -5594,54 +5590,40 @@
                     document.head.appendChild(sc)
                 })
             }
-            async function getWorker() {
-                if (workerState !== null) return workerState || undefined;
-                try {
-                    let src = '';
-                    try {
-                        const r = await fetch(NX_PDF_WORKER);
-                        if (r.ok) src = await r.text()
-                    } catch (e) {}
-                    if (!src || typeof Worker === 'undefined') {
-                        await loadFakeWorker();
-                        workerState = false;
-                        return undefined
-                    }
-                    const w = new Worker(URL.createObjectURL(new Blob([src], {
-                        type: 'text/javascript'
-                    })));
-                    const ok = await new Promise(res => {
-                        let done = false;
-                        w.onerror = () => {
-                            if (!done) {
-                                done = true;
-                                res(false)
-                            }
-                        };
-                        setTimeout(() => {
-                            if (!done) {
-                                done = true;
-                                res(true)
-                            }
-                        }, 60)
-                    });
-                    if (!ok) {
+
+            function makeWorker(forceMain) {
+                return (async () => {
+                    const lib = window.pdfjsLib;
+                    if (!forceMain) {
+                        let w = null;
                         try {
-                            w.terminate()
-                        } catch (e) {}
-                        await loadFakeWorker();
-                        workerState = false;
-                        return undefined
+                            w = new lib.PDFWorker();
+                            await Promise.race([w.promise, new Promise((_, no) => setTimeout(() => no(new Error('worker timeout')), 5000))]);
+                            return w
+                        } catch (e) {
+                            try {
+                                w && w.destroy()
+                            } catch (x) {}
+                        }
                     }
-                    workerState = new window.pdfjsLib.PDFWorker({
-                        port: w
-                    });
-                    return workerState
-                } catch (e) {
                     await loadFakeWorker();
-                    workerState = false;
-                    return undefined
-                }
+                    return new lib.PDFWorker()
+                })()
+            }
+
+            function getWorker() {
+                return workerP || (workerP = makeWorker(false))
+            }
+
+            function useMainThread() {
+                const old = workerP;
+                workerP = makeWorker(true);
+                if (old) old.then(w => {
+                    try {
+                        w.destroy()
+                    } catch (e) {}
+                }, () => {});
+                return workerP
             }
             setTimeout(() => {
                 if (window.pdfjsLib) getWorker()
@@ -5664,6 +5646,39 @@
                     return false
                 }
             }
+            function guarded(task, onFrac) {
+                return new Promise((res, no) => {
+                    let t = 0;
+                    const arm = () => {
+                        clearTimeout(t);
+                        t = setTimeout(() => {
+                            const e = new Error('PDF engine stalled');
+                            e.stalled = true;
+                            no(e)
+                        }, 20000)
+                    };
+                    arm();
+                    task.onProgress = q => {
+                        arm();
+                        if (q && q.total) onFrac(q.loaded / q.total)
+                    };
+                    task.onPassword = (cb, reason) => {
+                        clearTimeout(t);
+                        askPw(reason === 2).then(p => {
+                            arm();
+                            if (p) cb(p);
+                            else task.destroy()
+                        })
+                    };
+                    task.promise.then(d => {
+                        clearTimeout(t);
+                        res(d)
+                    }, e => {
+                        clearTimeout(t);
+                        no(e)
+                    })
+                })
+            }
             async function openPdfDoc(f, onProg) {
                 const prog = (p, l) => {
                     try {
@@ -5674,47 +5689,32 @@
                 const lib = window.pdfjsLib;
                 if (!lib) throw new Error('PDF engine unavailable');
                 prog(0, L('Starting PDF engine…', 'جارٍ تشغيل محرك PDF…'));
-                const worker = await getWorker();
+                let worker = await getWorker();
                 prog(.08);
-                const modes = f.size <= 1e8 ? ['full', 'range'] : ['range', 'full'];
+                const modes = f.size <= 1.9e9 && canAlloc(f.size) ? ['full', 'range'] : ['range'];
                 const errs = [];
-                for (const mode of modes) {
-                    if (mode === 'full' && f.size > 8e6 && (f.size > 1.9e9 || !canAlloc(f.size))) {
-                        errs.push(mode + ': file larger than this browser can allocate');
-                        continue
-                    }
+                let mainTried = false;
+                for (let mi = 0; mi < modes.length; mi++) {
+                    const mode = modes[mi];
                     let task = null,
-                        doc = null,
-                        timer = 0;
+                        doc = null;
                     try {
                         if (mode === 'full') {
                             prog(.1, L('Reading file…', 'جارٍ قراءة الملف…'));
-                            const data = await readAll(f, fr => prog(.1 + .5 * fr));
+                            const data = await readAll(f, fr => prog(.1 + .4 * fr));
                             task = lib.getDocument({
                                 data,
                                 isEvalSupported: false,
                                 worker
                             });
-                            task.onProgress = q => {
-                                if (q && q.total) prog(.6 + .35 * q.loaded / q.total, L('Reading document structure…', 'جارٍ قراءة بنية المستند…'))
-                            }
+                            doc = await guarded(task, fr => prog(.5 + .45 * fr, L('Reading document structure…', 'جارٍ قراءة بنية المستند…')))
                         } else {
                             const init = new Uint8Array(await f.slice(0, Math.min(f.size, 1 << 16)).arrayBuffer()),
                                 tr = new lib.PDFDataRangeTransport(f.size, init);
                             let got = 0;
                             prog(.12, L('Reading document structure…', 'جارٍ قراءة بنية المستند…'));
-                            let kill = () => {};
-                            const guard = new Promise((_, no) => {
-                                kill = () => {
-                                    clearTimeout(timer);
-                                    timer = setTimeout(() => no(new Error('Range loading stalled')), 60000)
-                                };
-                                kill()
-                            });
                             tr.requestDataRange = (b, e) => {
-                                kill();
                                 f.slice(b, e).arrayBuffer().then(buf => {
-                                    kill();
                                     got += buf.byteLength;
                                     prog(.12 + .8 * (1 - Math.exp(-got / 6e6)));
                                     tr.onDataRange(b, new Uint8Array(buf))
@@ -5733,26 +5733,19 @@
                                 isEvalSupported: false,
                                 worker
                             });
-                            task.onPassword = (cb, reason) => {
-                                askPw(reason === 2).then(p => p ? cb(p) : task.destroy())
-                            };
-                            const load = (async () => {
-                                doc = await task.promise;
-                                await doc.getPage(1);
-                                return doc
-                            })();
-                            await Promise.race([load, guard]);
-                            clearTimeout(timer);
-                            return doc
+                            doc = await guarded(task, () => {})
                         }
-                        task.onPassword = (cb, reason) => {
-                            askPw(reason === 2).then(p => p ? cb(p) : task.destroy())
-                        };
-                        doc = await task.promise;
-                        await doc.getPage(1);
+                        let t2 = 0;
+                        await Promise.race([doc.getPage(1), new Promise((_, no) => {
+                            t2 = setTimeout(() => {
+                                const e = new Error('PDF engine stalled');
+                                e.stalled = true;
+                                no(e)
+                            }, 20000)
+                        })]);
+                        clearTimeout(t2);
                         return doc
                     } catch (err) {
-                        clearTimeout(timer);
                         console.warn('PDF open (' + mode + ') failed', err);
                         errs.push(mode + ': ' + ((err && err.message) || err));
                         try {
@@ -5761,7 +5754,13 @@
                         try {
                             task && task.destroy()
                         } catch (x) {}
-                        if (err && err.name === 'PasswordException') throw err
+                        if (err && err.name === 'PasswordException') throw err;
+                        if (err && err.stalled && !mainTried) {
+                            mainTried = true;
+                            prog(.08, L('Switching to compatibility mode…', 'جارٍ التبديل إلى وضع التوافق…'));
+                            worker = await useMainThread();
+                            mi--
+                        }
                     }
                 }
                 const e = new Error(errs.join(' | '));
@@ -5821,54 +5820,6 @@
             async function getFile(id, cb) {
                 return window.NXSTORE.get(id, cb)
             }
-            let pre = null;
-
-            function dropPre() {
-                if (!pre) return;
-                clearTimeout(pre.timer);
-                const p = pre;
-                pre = null;
-                p.promise.then(r => {
-                    try {
-                        r.doc.destroy()
-                    } catch (e) {}
-                }).catch(() => {})
-            }
-
-            function prefetch(id) {
-                if (pre && pre.id === id) return;
-                dropPre();
-                const meta = (LS.get('nexa.site.v1', {}).books || []).find(x => x.id === id);
-                if (!meta || !meta.fn || meta.ty !== 'PDF' || !window.pdfjsLib) return;
-                const pr = {
-                    id,
-                    cb: null,
-                    last: null,
-                    promise: null,
-                    timer: 0
-                };
-                const rp = (p, l) => {
-                    pr.last = [p, l];
-                    pr.cb && pr.cb(p, l)
-                };
-                pr.promise = (async () => {
-                    const f = await getFile(id, fr => rp(fr * 30, L('Reading from storage…', 'جارٍ القراءة من التخزين…')));
-                    if (!f) throw Error('Missing file');
-                    const doc = await openPdfDoc(f, (p, l) => rp(35 + p * 50, l));
-                    const first = await doc.getPage(1);
-                    return {
-                        f,
-                        doc,
-                        first
-                    }
-                })();
-                pr.promise.catch(() => {});
-                pr.timer = setTimeout(() => {
-                    if (!pr.cb) dropPre()
-                }, 20000);
-                pre = pr
-            }
-
             let file = null,
                 fileId = null,
                 pdfDoc = null,
@@ -5893,20 +5844,7 @@
                 });
                 window.nxThemeColor && nxThemeColor(getComputedStyle(reader).backgroundColor);
                 try {
-                    let f, doc;
-                    if (pre && pre.id === id) {
-                        const pr = pre;
-                        pr.cb = (p, l) => P.set(p, l);
-                        if (pr.last) P.set(pr.last[0], pr.last[1]);
-                        const r = await pr.promise.catch(() => null);
-                        clearTimeout(pr.timer);
-                        if (pre === pr) pre = null;
-                        if (r) {
-                            f = r.f;
-                            doc = r.doc
-                        }
-                    }
-                    if (!f) f = await getFile(id, fr => P.set(fr * 30, L('Reading from storage…', 'جارٍ القراءة من التخزين…')));
+                    const f = await getFile(id, fr => P.set(fr * 30, L('Reading from storage…', 'جارٍ القراءة من التخزين…')));
                     if (!f) {
                         const e = new Error('Missing file');
                         e.missing = true;
@@ -5916,7 +5854,7 @@
                     P.set(32);
                     file = f;
                     fileId = String(id);
-                    if (!doc) doc = await openPdfDoc(f, (p, l) => P.set(35 + p * 55, l));
+                    const doc = await openPdfDoc(f, (p, l) => P.set(35 + p * 55, l));
                     if (myTok !== openTok) {
                         try {
                             doc.destroy()
@@ -5993,17 +5931,7 @@
                 setTimeout(() => URL.revokeObjectURL(u), 4000)
             };
 
-            let hoverT = 0;
-            $('#lib').addEventListener('mouseover', e => {
-                const b = e.target.closest('[data-open]');
-                clearTimeout(hoverT);
-                if (b && e.pointerType !== 'touch') hoverT = setTimeout(() => prefetch(+b.dataset.open), 80)
-            });
-            $('#lib').addEventListener('pointerdown', e => {
-                const b = e.target.closest('[data-open]');
-                if (b) prefetch(+b.dataset.open)
-            });
-            $('#lib').addEventListener('click', e => {
+      $('#lib').addEventListener('click', e => {
                 const b = e.target.closest('[data-open]');
                 if (!b) return;
                 e.preventDefault();
