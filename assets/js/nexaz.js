@@ -5576,37 +5576,88 @@
                 })
             }
             const NX_PDF_WORKER = 'assets/js/pdf-worker.js';
-            let workerP = null;
+            let workerP = null,
+                srcP = null;
 
-            function loadFakeWorker() {
+            function readWorkerSrc() {
+                return srcP || (srcP = (async () => {
+                    try {
+                        const r = await fetch(NX_PDF_WORKER);
+                        if (r.ok) {
+                            const t = await r.text();
+                            if (t && t.indexOf('WorkerMessageHandler') > -1) return t
+                        }
+                    } catch (e) {}
+                    return ''
+                })())
+            }
+
+            function injectFake(src) {
                 return new Promise(res => {
                     if (window.pdfjsWorker) {
                         res();
                         return
                     }
                     const sc = document.createElement('script');
-                    sc.src = NX_PDF_WORKER;
-                    sc.onload = sc.onerror = () => res();
-                    document.head.appendChild(sc)
+                    if (src) {
+                        sc.textContent = src;
+                        document.head.appendChild(sc);
+                        res()
+                    } else {
+                        sc.src = NX_PDF_WORKER;
+                        sc.onload = sc.onerror = () => res();
+                        document.head.appendChild(sc)
+                    }
                 })
             }
 
             function makeWorker(forceMain) {
                 return (async () => {
-                    const lib = window.pdfjsLib;
+                    const lib = window.pdfjsLib,
+                        src = await readWorkerSrc();
                     if (!forceMain) {
-                        let w = null;
-                        try {
-                            w = new lib.PDFWorker();
-                            await Promise.race([w.promise, new Promise((_, no) => setTimeout(() => no(new Error('worker timeout')), 5000))]);
-                            return w
-                        } catch (e) {
+                        if (src && typeof Worker !== 'undefined') {
+                            let w = null;
                             try {
-                                w && w.destroy()
-                            } catch (x) {}
+                                w = new Worker(URL.createObjectURL(new Blob([src], {
+                                    type: 'text/javascript'
+                                })));
+                                const ok = await new Promise(res => {
+                                    let done = false;
+                                    w.onerror = () => {
+                                        if (!done) {
+                                            done = true;
+                                            res(false)
+                                        }
+                                    };
+                                    setTimeout(() => {
+                                        if (!done) {
+                                            done = true;
+                                            res(true)
+                                        }
+                                    }, 400)
+                                });
+                                if (ok) return new lib.PDFWorker({
+                                    port: w
+                                })
+                            } catch (e) {}
+                            try {
+                                w && w.terminate()
+                            } catch (e) {}
+                        } else if (!src) {
+                            let w = null;
+                            try {
+                                w = new lib.PDFWorker();
+                                await Promise.race([w.promise, new Promise((_, no) => setTimeout(() => no(new Error('worker timeout')), 5000))]);
+                                return w
+                            } catch (e) {
+                                try {
+                                    w && w.destroy()
+                                } catch (x) {}
+                            }
                         }
                     }
-                    await loadFakeWorker();
+                    await injectFake(src);
                     return new lib.PDFWorker()
                 })()
             }
@@ -5655,7 +5706,7 @@
                             const e = new Error('PDF engine stalled');
                             e.stalled = true;
                             no(e)
-                        }, 20000)
+                        }, 10000)
                     };
                     arm();
                     task.onProgress = q => {
@@ -5741,7 +5792,7 @@
                                 const e = new Error('PDF engine stalled');
                                 e.stalled = true;
                                 no(e)
-                            }, 20000)
+                            }, 15000)
                         })]);
                         clearTimeout(t2);
                         return doc
@@ -5884,7 +5935,7 @@
                     console.error(err);
                     reader.classList.remove('nx-loading', 'gn-mode');
                     reader.classList.add('nx-failed');
-                    showMsg(err && err.missing ? L('This file is no longer available on this device.', 'لم يعد هذا الملف متاحًا على هذا الجهاز.') : err && err.name === 'PasswordException' ? L('This document is password-protected.', 'هذا المستند محمي بكلمة مرور.') : L('Could not open this document. It may be corrupted or too large for this device.', 'تعذّر فتح هذا المستند. قد يكون تالفًا أو كبيرًا جدًا على هذا الجهاز.'))
+                    showMsg(err && err.missing ? L('This file is no longer available on this device.', 'لم يعد هذا الملف متاحًا على هذا الجهاز.') : err && /fake worker|WorkerMessageHandler/.test(err.message || '') ? L('The PDF engine file (assets/js/pdf-worker.js) could not be loaded. Make sure it is uploaded next to the other files.', 'تعذّر تحميل ملف محرك PDF (assets/js/pdf-worker.js). تأكد من رفعه مع بقية الملفات.') : err && err.name === 'PasswordException' ? L('This document is password-protected.', 'هذا المستند محمي بكلمة مرور.') : L('Could not open this document. It may be corrupted or too large for this device.', 'تعذّر فتح هذا المستند. قد يكون تالفًا أو كبيرًا جدًا على هذا الجهاز.'))
                 }
             }
 
