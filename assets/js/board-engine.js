@@ -123,7 +123,7 @@ async function saveFile(n,b){try{const c=W.claude&&W.claude.use?await W.claude.u
 W.GN=function(root,o){
  const T=(e,a)=>o.lang==='ar'?a:e;
  const st={view:(o.fixed&&(()=>{try{return localStorage.getItem('gn:pdfview')}catch(e){return null}})()==='one')?'one':'all',tool:'hand',z:1,pen:{c:'#111827',w:4,k:'fountain'},hl:{c:'#fde047',w:14},er:{m:'stroke',w:18},sh:{k:'line',c:'#000000',w:3,f:0},tx:{c:'#000000',s:24},nt:{bg:'#fde68a',c:'#1c1c1e',s:22},ls:{c:'#ef4444',w:6}};
- let P=o.pages,items=o.items,cur=0,u=[],r=[],sel=null,penSeen=0,mounted={},svT=0,rrT=0,sc,pgs,pop,pill,side,els=[],io,laser=[],lasT=0,lasEnd=0,lasHov=null,curTa=null,delArm=0,erHov=null;
+ let P=o.pages,items=o.items,cur=0,u=[],r=[],sel=null,penSeen=0,mounted={},tok=[],pend=[],mt=[],svT=0,rrT=0,sc,pgs,pop,pill,side,els=[],io,laser=[],lasT=0,lasEnd=0,lasHov=null,curTa=null,delArm=0,erHov=null;
  root.classList.add('gn');root.dataset.tool='hand';root.dataset.view=st.view;if(o.fixed)root.dataset.fixed='1';
  const save=()=>{clearTimeout(svT);svT=setTimeout(()=>o.save&&o.save(items,P),500)};
  const tools=[['hand',T('Hand','يد')],['pen',T('Pen','قلم')],['hl',T('Highlighter','هايلايتر')],['er',T('Eraser','ممحاة')],['shape',T('Shapes','أشكال')],['text',T('Text','نص')],['note',T('Sticky note','ملاحظة')],['emoji',T('Emoji & stickers','إيموجي وملصقات')],['img',T('Image','صورة')],['lasso',T('Lasso','تحديد')],['laser',T('Laser','ليزر')]];
@@ -146,19 +146,20 @@ W.GN=function(root,o){
  function redo(){const e=r.pop();if(!e)return;u.push({i:e.i,a:items[e.i].slice()});items[e.i]=e.a;sel=null;redraw(e.i);save();hb()}
 
  function build(){
-  io&&io.disconnect();pgs.innerHTML='';mounted={};els=[];
+  io&&io.disconnect();pgs.innerHTML='';mt.forEach(clearTimeout);mt=[];pend.forEach(c=>c&&o.drop&&o.drop(c));pend=[];tok=tok.map(x=>(x||0)+1);mounted={};els=[];
   P.forEach((p,i)=>{const d=document.createElement('div');d.className='gn-pg';d.dataset.i=i;d.innerHTML='<canvas class="gbs"></canvas><canvas class="ik"></canvas><canvas class="lv"></canvas>';pgs.appendChild(d);els.push(d);bind(d.querySelector('.lv'),i)});
-  io=new IntersectionObserver(es=>es.forEach(e=>{const i=+e.target.dataset.i;e.isIntersecting?mount(i):unmount(i)}),{root:sc,rootMargin:'1400px 0px'});
+  io=new IntersectionObserver(es=>es.forEach(e=>{const i=+e.target.dataset.i;clearTimeout(mt[i]);if(e.isIntersecting){if(mounted[i])mount(i);else mt[i]=setTimeout(()=>mount(i),140)}else unmount(i)}),{root:sc,rootMargin:'1400px 0px'});
   els.forEach(d=>io.observe(d));els.forEach((d,k)=>d.classList.toggle('solo',k===cur));size();$('.tot').textContent='/ '+P.length;thumbs()}
  function size(){P.forEach((p,i)=>{els[i].style.width=p.w*st.z+'px';els[i].style.height=p.h*st.z+'px'});$('[data-a=zr]').textContent=Math.round(st.z*100)+'%'}
  const dpr=()=>Math.min(W.devicePixelRatio||1,2);
  function mount(i){const d=els[i];if(!d)return;const bs=d.querySelector('.gbs'),ik=d.querySelector('.ik'),lv=d.querySelector('.lv');let w=Math.round(P[i].w*st.z*dpr()),h=Math.round(P[i].h*st.z*dpr());if(o.maxPx&&w*h>o.maxPx){const k=Math.sqrt(o.maxPx/(w*h));w=Math.round(w*k);h=Math.round(h*k)}
   const key=w+'x'+h;if(mounted[i]===key)return;mounted[i]=key;
-  let pv=null;if(bs.width&&bs.height){try{pv=document.createElement('canvas');pv.width=bs.width;pv.height=bs.height;pv.getContext('2d').drawImage(bs,0,0)}catch(e){pv=null}}
-  [bs,ik,lv].forEach(c=>{c.width=w;c.height=h});
-  if(pv){try{bs.getContext('2d').drawImage(pv,0,0,pv.width,pv.height,0,0,w,h)}catch(e){}}
-  const p=o.base&&o.base(i,bs,w,P[i]);redraw(i);if(p&&p.catch)p.catch(()=>{})}
- function unmount(i){if(!mounted[i])return;delete mounted[i];els[i].querySelectorAll('canvas').forEach(c=>{c.width=1;c.height=1})}
+  const tk=tok[i]=(tok[i]||0)+1;
+  if(pend[i]){o.drop&&o.drop(pend[i]);pend[i]=null}
+  if(!o.base||bs.width<=1||bs.height<=1){[bs,ik,lv].forEach(c=>{c.width=w;c.height=h});const p=o.base&&o.base(i,bs,w,P[i]);redraw(i);if(p&&p.catch)p.catch(()=>{});return}
+  const oc=document.createElement('canvas');oc.width=w;oc.height=h;pend[i]=oc;
+  Promise.resolve(o.base(i,oc,w,P[i])).then(()=>{if(tok[i]!==tk||!els[i]||!mounted[i])return;pend[i]=null;[bs,ik,lv].forEach(c=>{c.width=w;c.height=h});bs.getContext('2d').drawImage(oc,0,0);redraw(i)}).catch(()=>{if(tok[i]===tk)pend[i]=null})}
+ function unmount(i){if(!mounted[i])return;delete mounted[i];tok[i]=(tok[i]||0)+1;if(pend[i]){o.drop&&o.drop(pend[i]);pend[i]=null}const bs=els[i].querySelector('.gbs');o.drop&&bs&&o.drop(bs);els[i].querySelectorAll('canvas').forEach(c=>{c.width=1;c.height=1})}
  function redraw(i){const d=els[i];if(!d||!mounted[i])return;const c=d.querySelector('.ik'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);const s=c.width/P[i].w;for(const it of items[i])dr(x,it,s);live(i);if(thT[i]===undefined)thT[i]=setTimeout(()=>{delete thT[i];th1(i)},250)}
  W.addEventListener('gn-img',()=>{for(const i in mounted)redraw(+i)});
 
@@ -464,7 +465,7 @@ W.GN=function(root,o){
  root.addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&k==='y')redo();else if((k==='delete'||k==='backspace')&&sel){chg(sel.i,A=>A.filter(x=>!sel.ids.includes(x)));const i=sel.i;sel=null;live(i)}});
  root.tabIndex=0;
  build();fit();dots();hb();size();
- return{setTheme:t=>{root.dataset.th=t},fit:()=>{if(st.view==='one')fitPage();else{fit();setZ(st.z)}},load:v=>$('.gn-load').classList.toggle('show',!!v),setTitle:t=>$('.gn-ttl').textContent=t,rebuild:(p,it)=>{P=p;items=it;u=[];r=[];sel=null;build();fit();hb()},setIcon:k=>{$('[data-a=back]').innerHTML=ic(k)},setFs:on=>{const b=$('[data-a=fs]');if(b)b.innerHTML=ic(on?'fullx':'full')},getPage:()=>cur,goPage:n=>goto(n,true),flush:()=>{clearTimeout(svT);o.save&&o.save(items,P)},destroy:()=>{clearTimeout(svT);io&&io.disconnect();mounted={};root.innerHTML='';root.classList.remove('gn')}}
+ return{setTheme:t=>{root.dataset.th=t},fit:()=>{if(st.view==='one')fitPage();else{fit();setZ(st.z)}},load:v=>$('.gn-load').classList.toggle('show',!!v),setTitle:t=>$('.gn-ttl').textContent=t,rebuild:(p,it)=>{P=p;items=it;u=[];r=[];sel=null;build();fit();hb()},setIcon:k=>{$('[data-a=back]').innerHTML=ic(k)},setFs:on=>{const b=$('[data-a=fs]');if(b)b.innerHTML=ic(on?'fullx':'full')},getPage:()=>cur,goPage:n=>goto(n,true),flush:()=>{clearTimeout(svT);o.save&&o.save(items,P)},destroy:()=>{clearTimeout(svT);io&&io.disconnect();mt.forEach(clearTimeout);mt=[];pend.forEach(c=>c&&o.drop&&o.drop(c));pend=[];tok=tok.map(x=>(x||0)+1);mounted={};root.innerHTML='';root.classList.remove('gn')}}
 }
 
 function drawBorder(x,W,H,b,s){

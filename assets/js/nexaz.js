@@ -186,6 +186,7 @@
                 'Auto': 'تلقائي',
                 'Custom colour': 'لون مخصص',
                 'Delete subject': 'حذف القسم',
+                'At least one subject must remain': 'لا يمكن حذف آخر قسم',
                 'Uncategorized': 'غير مصنّف',
                 'Delete this subject?': 'حذف هذا القسم؟',
                 'Its books will move to “All”.': 'ستظهر كتبه ضمن «الكل» فقط.',
@@ -490,9 +491,8 @@
                 const cnt = s => S.books.filter(b => s === 'All' || b.s === s).length;
                 $('#subj').innerHTML = ['All', ...S.subjects].map(s => {
                     const label = esc(s === 'All' ? tr('All subjects') : tr(s)) + ' (' + cnt(s) + ')';
-                    const chip = `<button class="chip ${s===subj?'on':''}" data-s="${esc(s)}">${label}</button>`;
-                    if (s === 'All') return chip;
-                    return `<span class="chip-wrap">${chip}<button type="button" class="chip-del" data-sdel="${esc(s)}" title="${tr('Delete subject')}" aria-label="${tr('Delete subject')}">×</button></span>`
+                    if (s === 'All' || S.subjects.length < 2) return `<button class="chip ${s===subj?'on':''}" data-s="${esc(s)}">${label}</button>`;
+                    return `<span class="chip chip-has ${s===subj?'on':''}" role="button" tabindex="0" data-s="${esc(s)}"><span class="chip-t">${label}</span><button type="button" class="chip-del" data-sdel="${esc(s)}" title="${tr('Delete subject')}" aria-label="${tr('Delete subject')}">×</button></span>`
                 }).join('');
                 S.books.forEach((x, i) => {
                     if (x.c == null) x.c = i ? (S.books[i - 1].c + 1) % PAL.length : 0
@@ -626,16 +626,13 @@
                     render();
                     return
                 }
-                const s = e.target.closest('#subj .chip');
-                if (s) {
-                    subj = s.dataset.s;
-                    SFX.tap();
-                    render();
-                    return
-                }
                 const sd = e.target.closest('[data-sdel]');
                 if (sd) {
                     const name = sd.dataset.sdel;
+                    if (S.subjects.length < 2) {
+                        toast(tr('At least one subject must remain'));
+                        return
+                    }
                     confirmDlg({
                         title: tr('Delete this subject?'),
                         msg: tr('Its books will move to “All”.'),
@@ -652,6 +649,13 @@
                         save();
                         render()
                     });
+                    return
+                }
+                const s = e.target.closest('#subj .chip');
+                if (s) {
+                    subj = s.dataset.s;
+                    SFX.tap();
+                    render();
                     return
                 }
                 const bd = e.target.closest('[data-bdel]');
@@ -1405,6 +1409,13 @@
                     h = recolorPop.offsetHeight;
                 recolorPop.style.left = Math.max(8, Math.min(innerWidth - w - 8, r.left + r.width / 2 - w / 2)) + 'px';
                 recolorPop.style.top = (r.bottom + h + 12 > innerHeight ? Math.max(8, r.top - h - 8) : r.bottom + 8) + 'px'
+            });
+            $('#subj').addEventListener('keydown', e => {
+                const c = e.target.closest('.chip-has');
+                if (c && c === e.target && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    c.click()
+                }
             });
             $('#cpPick').onclick = e => {
                 e.stopPropagation();
@@ -5665,7 +5676,7 @@
                 prog(0, L('Starting PDF engine…', 'جارٍ تشغيل محرك PDF…'));
                 const worker = await getWorker();
                 prog(.08);
-                const modes = f.size <= 8e6 ? ['full'] : ['range', 'full'];
+                const modes = f.size <= 1e8 ? ['full', 'range'] : ['range', 'full'];
                 const errs = [];
                 for (const mode of modes) {
                     if (mode === 'full' && f.size > 8e6 && (f.size > 1.9e9 || !canAlloc(f.size))) {

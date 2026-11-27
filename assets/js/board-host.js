@@ -121,16 +121,18 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
   var cancels = new WeakMap();
   function pdfBaseFor(doc) {
     return function (i, cv, w, p) {
-      var prev = cancels.get(cv); if (prev) { try { prev.cancel(); } catch (e) {} }
+      var prev = cancels.get(cv); if (prev) { try { prev.cancel(); } catch (e) {} cancels.delete(cv); }
       return doc.getPage(p.pdf).then(function (pg) {
+        if (cv.width <= 1) return;
         var v1 = pg.getViewport({ scale: 1 });
         var vp = pg.getViewport({ scale: cv.width / v1.width });
         var x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height);
         var t = pg.render({ canvasContext: x, viewport: vp }); cancels.set(cv, t);
-        return t.promise;
+        return t.promise.then(function () { if (cancels.get(cv) === t) cancels.delete(cv); });
       });
     };
   }
+  function dropRender(cv) { var t = cancels.get(cv); if (t) { try { t.cancel(); } catch (e) {} cancels.delete(cv); } }
   async function pageSizes(doc, onProg) {
     var n = doc.numPages, out = new Array(n), CH = 24;
     for (var s0 = 0; s0 < n; s0 += CH) {
@@ -156,7 +158,7 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
     var key = 'pdf:' + o.fileId;
     var g = W.GN(root, {
       lang: isAr() ? 'ar' : 'en', title: o.title || '', pages: pages, items: items, fixed: 1, maxPx: 16e6,
-      base: pdfBaseFor(doc), exportName: (o.title || 'document').replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60),
+      base: pdfBaseFor(doc), drop: dropRender, exportName: (o.title || 'document').replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60),
       save: function (it) { kvSet(key, { items: it, n: n }); },
       onBack: function () { o.onBack && o.onBack(); },
       onFs: function () { elFs(host); }
