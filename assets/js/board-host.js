@@ -119,45 +119,97 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
 
   var pdf = null;
   var cancels = new WeakMap();
+  var dead = new WeakSet(), q = [], running = 0, MAXR = 2;
+  function pump() {
+    while (running < MAXR && q.length) {
+      var j = q.shift(); running++;
+      j().then(done, done);
+    }
+  }
+  var clT = 0, curDoc = null;
+  function done() {
+    running--; pump();
+    if (!running && !q.length && curDoc) {
+      clearTimeout(clT);
+      clT = setTimeout(function () {
+        if (running || q.length || !curDoc) return;
+        try { Promise.resolve(curDoc.cleanup()).catch(function () {}); } catch (e) {}
+      }, 800);
+    }
+  }
+  function enqueue(job) {
+    return new Promise(function (res, rej) {
+      q.push(function () { return job().then(res, rej); });
+      pump();
+    });
+  }
   function pdfBaseFor(doc) {
+    curDoc = doc;
     return function (i, cv, w, p) {
       var prev = cancels.get(cv); if (prev) { try { prev.cancel(); } catch (e) {} cancels.delete(cv); }
-      return doc.getPage(p.pdf).then(function (pg) {
-        if (cv.width <= 1) return;
-        var v1 = pg.getViewport({ scale: 1 });
-        var vp = pg.getViewport({ scale: cv.width / v1.width });
-        var x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height);
-        var t = pg.render({ canvasContext: x, viewport: vp }); cancels.set(cv, t);
-        return t.promise.then(function () { if (cancels.get(cv) === t) cancels.delete(cv); });
+      dead.delete(cv);
+      return enqueue(function () {
+        if (dead.has(cv) || cv.width <= 1) return Promise.resolve();
+        return doc.getPage(p.pdf).then(function (pg) {
+          if (dead.has(cv) || cv.width <= 1) { try { pg.cleanup(); } catch (e) {} return; }
+          var v1 = pg.getViewport({ scale: 1 });
+          var vp = pg.getViewport({ scale: cv.width / v1.width });
+          var x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height);
+          var t = pg.render({ canvasContext: x, viewport: vp }); cancels.set(cv, t);
+          return t.promise.then(function () {
+            if (cancels.get(cv) === t) cancels.delete(cv);
+            try { pg.cleanup(); } catch (e) {}
+          }, function (e) {
+            try { pg.cleanup(); } catch (x2) {}
+            throw e;
+          });
+        });
       });
     };
   }
-  function dropRender(cv) { var t = cancels.get(cv); if (t) { try { t.cancel(); } catch (e) {} cancels.delete(cv); } }
-  async function pageSizes(doc, onProg) {
-    var n = doc.numPages, out = new Array(n), CH = 24;
-    for (var s0 = 0; s0 < n; s0 += CH) {
+  function dropRender(cv) {
+    dead.add(cv);
+    var t = cancels.get(cv); if (t) { try { t.cancel(); } catch (e) {} cancels.delete(cv); }
+  }
+  function sizeOf(pg) { var v = pg.getViewport({ scale: 1 }); var r = { w: v.width, h: v.height }; try { pg.cleanup(); } catch (e) {} return r; }
+  async function firstSizes(doc, k) {
+    var out = new Array(k), CH = 12;
+    for (var s0 = 0; s0 < k; s0 += CH) {
       var js = [];
-      for (var k = s0; k < Math.min(n, s0 + CH); k++) js.push(doc.getPage(k + 1).then((function (kk) { return function (pg) {
-        var v = pg.getViewport({ scale: 1 }); out[kk] = { w: v.width, h: v.height };
-      }; })(k)));
+      for (var j = s0; j < Math.min(k, s0 + CH); j++) js.push(doc.getPage(j + 1).then((function (jj) { return function (pg) { out[jj] = sizeOf(pg); }; })(j)));
       await Promise.all(js);
-      if (onProg) onProg(Math.min(n, s0 + CH) / n);
     }
     return out;
+  }
+  async function refineSizes(doc, g, from) {
+    var n = doc.numPages, CH = 10;
+    for (var s0 = from; s0 < n; s0 += CH) {
+      if (!pdf || pdf.g !== g) return;
+      var upd = [];
+      for (var j = s0; j < Math.min(n, s0 + CH); j++) {
+        try { var sz = sizeOf(await doc.getPage(j + 1)); upd.push({ i: j, w: sz.w, h: Math.round(900 * sz.h / sz.w), pw: sz.w, ph: sz.h }); } catch (e) {}
+      }
+      if (!pdf || pdf.g !== g) return;
+      g.setSizes(upd);
+      await new Promise(function (r) { setTimeout(r, 40); });
+    }
   }
   async function mountPdf(host, o) {
     await load();
     if (pdf) closePdf();
-    var doc = o.doc, sizes = await pageSizes(doc, o.onProgress);
-    var saved = await kvGet('pdf:' + o.fileId), n = sizes.length;
+    var doc = o.doc, n = doc.numPages, K = Math.min(n, 25);
+    var first = await firstSizes(doc, K);
+    if (o.onProgress) o.onProgress(1);
+    var saved = await kvGet('pdf:' + o.fileId);
     var items = [];
     for (var i = 0; i < n; i++) items.push(saved && saved.items && Array.isArray(saved.items[i]) ? saved.items[i] : []);
-    var pages = sizes.map(function (s, i) { return { w: 900, h: Math.round(900 * s.h / s.w), pw: s.w, ph: s.h, paper: 'blank', pdf: i + 1 }; });
+    var pages = [];
+    for (var i2 = 0; i2 < n; i2++) { var s2 = first[i2] || first[0]; pages.push({ w: 900, h: Math.round(900 * s2.h / s2.w), pw: s2.w, ph: s2.h, paper: 'blank', pdf: i2 + 1 }); }
     host.replaceChildren();
     var root = document.createElement('div'); host.appendChild(root);
     var key = 'pdf:' + o.fileId;
     var g = W.GN(root, {
-      lang: isAr() ? 'ar' : 'en', title: o.title || '', pages: pages, items: items, fixed: 1, maxPx: 16e6,
+      lang: isAr() ? 'ar' : 'en', title: o.title || '', pages: pages, items: items, fixed: 1, maxPx: 5e6,
       base: pdfBaseFor(doc), drop: dropRender, exportName: (o.title || 'document').replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 60),
       save: function (it) { kvSet(key, { items: it, n: n }); },
       onBack: function () { o.onBack && o.onBack(); },
@@ -169,13 +221,14 @@ function paper(i,cv,w,p,fl){var x=cv.getContext('2d'),s=w/p.w,h=cv.height,W=cv.w
       g.fit();
       if (o.startPage > 1) g.goPage(o.startPage - 1);
     }, 60);
+    if (n > K) setTimeout(function () { refineSizes(doc, g, K); }, 400);
     return g;
   }
   function closePdf() {
     if (!pdf) return 0;
     var page = 1;
     try { page = pdf.g.getPage() + 1; pdf.g.flush(); pdf.g.destroy(); } catch (e) {}
-    pdf.root.remove(); pdf = null;
+    pdf.root.remove(); pdf = null; curDoc = null; clearTimeout(clT);
     return page;
   }
 

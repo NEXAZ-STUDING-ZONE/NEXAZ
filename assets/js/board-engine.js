@@ -146,20 +146,23 @@ W.GN=function(root,o){
  function redo(){const e=r.pop();if(!e)return;u.push({i:e.i,a:items[e.i].slice()});items[e.i]=e.a;sel=null;redraw(e.i);save();hb()}
 
  function build(){
-  io&&io.disconnect();pgs.innerHTML='';mt.forEach(clearTimeout);mt=[];pend.forEach(c=>c&&o.drop&&o.drop(c));pend=[];tok=tok.map(x=>(x||0)+1);mounted={};els=[];
+  io&&io.disconnect();pgs.innerHTML='';mt.forEach(clearTimeout);mt=[];pend.forEach(c=>{if(c){o.drop&&o.drop(c);freeCv(c)}});pend=[];tok=tok.map(x=>(x||0)+1);mounted={};els=[];
   P.forEach((p,i)=>{const d=document.createElement('div');d.className='gn-pg';d.dataset.i=i;d.innerHTML='<canvas class="gbs"></canvas><canvas class="ik"></canvas><canvas class="lv"></canvas>';pgs.appendChild(d);els.push(d);bind(d.querySelector('.lv'),i)});
-  io=new IntersectionObserver(es=>es.forEach(e=>{const i=+e.target.dataset.i;clearTimeout(mt[i]);if(e.isIntersecting){if(mounted[i])mount(i);else mt[i]=setTimeout(()=>mount(i),140)}else unmount(i)}),{root:sc,rootMargin:'1400px 0px'});
+  io=new IntersectionObserver(es=>es.forEach(e=>{const i=+e.target.dataset.i;clearTimeout(mt[i]);if(e.isIntersecting){if(mounted[i])mount(i);else mt[i]=setTimeout(()=>mount(i),140)}else unmount(i)}),{root:sc,rootMargin:'500px 0px'});
   els.forEach(d=>io.observe(d));els.forEach((d,k)=>d.classList.toggle('solo',k===cur));size();$('.tot').textContent='/ '+P.length;thumbs()}
  function size(){P.forEach((p,i)=>{els[i].style.width=p.w*st.z+'px';els[i].style.height=p.h*st.z+'px'});$('[data-a=zr]').textContent=Math.round(st.z*100)+'%'}
- const dpr=()=>Math.min(W.devicePixelRatio||1,2);
+ const dpr=()=>Math.min(W.devicePixelRatio||1,1.5);
+ const freeCv=c=>{if(c){c.width=0;c.height=0}};
+ function killPend(i){if(pend[i]){o.drop&&o.drop(pend[i]);freeCv(pend[i]);pend[i]=null}}
  function mount(i){const d=els[i];if(!d)return;const bs=d.querySelector('.gbs'),ik=d.querySelector('.ik'),lv=d.querySelector('.lv');let w=Math.round(P[i].w*st.z*dpr()),h=Math.round(P[i].h*st.z*dpr());if(o.maxPx&&w*h>o.maxPx){const k=Math.sqrt(o.maxPx/(w*h));w=Math.round(w*k);h=Math.round(h*k)}
   const key=w+'x'+h;if(mounted[i]===key)return;mounted[i]=key;
   const tk=tok[i]=(tok[i]||0)+1;
-  if(pend[i]){o.drop&&o.drop(pend[i]);pend[i]=null}
-  if(!o.base||bs.width<=1||bs.height<=1){[bs,ik,lv].forEach(c=>{c.width=w;c.height=h});const p=o.base&&o.base(i,bs,w,P[i]);redraw(i);if(p&&p.catch)p.catch(()=>{});return}
+  killPend(i);
+  if(!o.base){[bs,ik,lv].forEach(c=>{c.width=w;c.height=h});redraw(i);return}
+  if(bs.width<=1||bs.height<=1)d.classList.add('ld');
   const oc=document.createElement('canvas');oc.width=w;oc.height=h;pend[i]=oc;
-  Promise.resolve(o.base(i,oc,w,P[i])).then(()=>{if(tok[i]!==tk||!els[i]||!mounted[i])return;pend[i]=null;[bs,ik,lv].forEach(c=>{c.width=w;c.height=h});bs.getContext('2d').drawImage(oc,0,0);redraw(i)}).catch(()=>{if(tok[i]===tk)pend[i]=null})}
- function unmount(i){if(!mounted[i])return;delete mounted[i];tok[i]=(tok[i]||0)+1;if(pend[i]){o.drop&&o.drop(pend[i]);pend[i]=null}const bs=els[i].querySelector('.gbs');o.drop&&bs&&o.drop(bs);els[i].querySelectorAll('canvas').forEach(c=>{c.width=1;c.height=1})}
+  Promise.resolve(o.base(i,oc,w,P[i])).then(()=>{if(tok[i]!==tk||!els[i]||!mounted[i]){freeCv(oc);return}pend[i]=null;[bs,ik,lv].forEach(c=>{c.width=w;c.height=h});bs.getContext('2d').drawImage(oc,0,0);freeCv(oc);d.classList.remove('ld');redraw(i)}).catch(()=>{if(tok[i]===tk){pend[i]=null;freeCv(oc);d.classList.remove('ld')}})}
+ function unmount(i){if(!mounted[i])return;delete mounted[i];tok[i]=(tok[i]||0)+1;killPend(i);const d=els[i],bs=d.querySelector('.gbs');o.drop&&bs&&o.drop(bs);d.classList.remove('ld');d.querySelectorAll('canvas').forEach(c=>{c.width=1;c.height=1})}
  function redraw(i){const d=els[i];if(!d||!mounted[i])return;const c=d.querySelector('.ik'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);const s=c.width/P[i].w;for(const it of items[i])dr(x,it,s);live(i);if(thT[i]===undefined)thT[i]=setTimeout(()=>{delete thT[i];th1(i)},250)}
  W.addEventListener('gn-img',()=>{for(const i in mounted)redraw(+i)});
 
@@ -264,7 +267,7 @@ W.GN=function(root,o){
  const pu=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2){pd=0;lm=null}};sc.addEventListener('pointerup',pu,true);sc.addEventListener('pointercancel',pu,true);
  const dist=()=>{const a=[...ptrs.values()];return Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1};
  sc.addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZ(st.z*(e.deltaY<0?1.08:.92))}},{passive:false});
- function setZ(z,soft){z=Math.max(.1,Math.min(5,z));const cy=(sc.scrollTop+sc.clientHeight/2)/sc.scrollHeight,cx=(sc.scrollLeft+sc.clientWidth/2)/sc.scrollWidth;st.z=z;size();sc.scrollTop=cy*sc.scrollHeight-sc.clientHeight/2;sc.scrollLeft=cx*sc.scrollWidth-sc.clientWidth/2;clearTimeout(rrT);rrT=setTimeout(()=>{for(const i in mounted)mount(+i);for(const i in mounted)redraw(+i)},soft?160:60)}
+ function setZ(z,soft){z=Math.max(.1,Math.min(5,z));const cy=(sc.scrollTop+sc.clientHeight/2)/sc.scrollHeight,cx=(sc.scrollLeft+sc.clientWidth/2)/sc.scrollWidth;st.z=z;size();sc.scrollTop=cy*sc.scrollHeight-sc.clientHeight/2;sc.scrollLeft=cx*sc.scrollWidth-sc.clientWidth/2;clearTimeout(rrT);rrT=setTimeout(()=>{for(const i in mounted)mount(+i);for(const i in mounted)redraw(+i)},soft?420:320)}
  function fit(){const w=sc.clientWidth-(W.innerWidth<700?16:48);st.z=Math.max(.3,Math.min(3,w/Math.max(...P.map(p=>p.w))));size()}
 
  const thT={},thB={};let thv=0,thl=0;function thLive(i){if(thl||!root.classList.contains('side'))return;thl=setTimeout(()=>{thl=0;th1(i)},60)}
@@ -466,7 +469,7 @@ W.GN=function(root,o){
  root.addEventListener('keydown',e=>{if(e.target.tagName==='TEXTAREA'||e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo()}else if((e.ctrlKey||e.metaKey)&&k==='y')redo();else if((k==='delete'||k==='backspace')&&sel){chg(sel.i,A=>A.filter(x=>!sel.ids.includes(x)));const i=sel.i;sel=null;live(i)}});
  root.tabIndex=0;
  build();fit();dots();hb();size();
- return{setTheme:t=>{root.dataset.th=t},fit:()=>{if(st.view==='one')fitPage();else{fit();setZ(st.z)}},load:v=>$('.gn-load').classList.toggle('show',!!v),setTitle:t=>$('.gn-ttl').textContent=t,rebuild:(p,it)=>{P=p;items=it;u=[];r=[];sel=null;build();fit();hb()},setIcon:k=>{$('[data-a=back]').innerHTML=ic(k)},setFs:on=>{const b=$('[data-a=fs]');if(b)b.innerHTML=ic(on?'fullx':'full')},getPage:()=>cur,goPage:n=>goto(n,true),flush:()=>{clearTimeout(svT);o.save&&o.save(items,P)},destroy:()=>{clearTimeout(svT);io&&io.disconnect();mt.forEach(clearTimeout);mt=[];pend.forEach(c=>c&&o.drop&&o.drop(c));pend=[];tok=tok.map(x=>(x||0)+1);mounted={};root.innerHTML='';root.classList.remove('gn')}}
+ return{setSizes:l=>{let ch=false;const a=els.find(d=>d.offsetTop+d.offsetHeight>sc.scrollTop+4),off=a?a.offsetTop-sc.scrollTop:0;l.forEach(u=>{const p=P[u.i];if(p&&Math.abs(p.h-u.h)>.5){p.h=u.h;p.pw=u.pw;p.ph=u.ph;ch=true}});if(!ch)return;size();if(a&&st.view!=='one')sc.scrollTop=a.offsetTop-off;for(const i in mounted)mount(+i)},setTheme:t=>{root.dataset.th=t},fit:()=>{if(st.view==='one')fitPage();else{fit();setZ(st.z)}},load:v=>$('.gn-load').classList.toggle('show',!!v),setTitle:t=>$('.gn-ttl').textContent=t,rebuild:(p,it)=>{P=p;items=it;u=[];r=[];sel=null;build();fit();hb()},setIcon:k=>{$('[data-a=back]').innerHTML=ic(k)},setFs:on=>{const b=$('[data-a=fs]');if(b)b.innerHTML=ic(on?'fullx':'full')},getPage:()=>cur,goPage:n=>goto(n,true),flush:()=>{clearTimeout(svT);o.save&&o.save(items,P)},destroy:()=>{clearTimeout(svT);io&&io.disconnect();mt.forEach(clearTimeout);mt=[];pend.forEach(c=>{if(c){o.drop&&o.drop(c);freeCv(c)}});pend=[];tok=tok.map(x=>(x||0)+1);mounted={};els.forEach(d=>d.querySelectorAll('canvas').forEach(c=>{c.width=0;c.height=0}));root.innerHTML='';root.classList.remove('gn')}}
 }
 
 function drawBorder(x,W,H,b,s){

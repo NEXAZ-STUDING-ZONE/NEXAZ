@@ -5742,7 +5742,7 @@
                 prog(0, L('Starting PDF engine…', 'جارٍ تشغيل محرك PDF…'));
                 let worker = await getWorker();
                 prog(.08);
-                const modes = f.size <= 1.9e9 && canAlloc(f.size) ? ['full', 'range'] : ['range'];
+                const modes = f.size <= 4e6 ? ['full', 'range'] : f.size <= 1.9e9 && canAlloc(f.size) ? ['range', 'full'] : ['range'];
                 const errs = [];
                 let mainTried = false;
                 for (let mi = 0; mi < modes.length; mi++) {
