@@ -3,11 +3,16 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -20,8 +25,12 @@ jobs:
 
       - name: Stamp cache-busting version
         run: |
-          SHA_SHORT=$(git rev-parse --short HEAD)
-          grep -rlE '\?v=[0-9]+' --include='*.html' --include='*.js' --include='*.webmanifest' . | xargs -r sed -i -E "s/\?v=[0-9]+/?v=${SHA_SHORT}/g"
+          SHA_SHORT=$(git rev-parse --short=7 HEAD)
+          for f in index.html app.webmanifest nexaz-worker.js assets/js/nexaz.js assets/js/preload.js; do
+            if [ -f "$f" ]; then
+              sed -i -E "s/(\.(png|ico|css|js|webp|jpg|svg)|['\"])\?v=[0-9]+/\1?v=${SHA_SHORT}/g" "$f"
+            fi
+          done
 
       - uses: actions/configure-pages@v5
 
